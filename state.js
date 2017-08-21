@@ -23,6 +23,10 @@ const PAWN_W = "P";
 const PAWN_B = "p";
 
 const WHITE_TO_PLAY = "w";
+const BLACK_TO_PLAY = "b";
+
+const CAN_CASTLE = "1";
+const CANT_CASTLE = "0";
 
 /*
  * A state string is:
@@ -86,12 +90,12 @@ function printState(state){
               `capture or pawn advance`);
 }
 
-/* Basic functions to parse the state */
+/* Basic functions to read from the state */
 const isWhiteToPlay = (state) => state[BOARD_SIZE] == WHITE_TO_PLAY;
-const canWCastleQ = (state) => state[BOARD_SIZE + 1] == "1";
-const canWCastleK = (state) => state[BOARD_SIZE + 2] == "1";
-const canBCastleQ = (state) => state[BOARD_SIZE + 3] == "1";
-const canBCastleK = (state) => state[BOARD_SIZE + 4] == "1";
+const canWCastleQ = (state) => state[BOARD_SIZE + 1] == CAN_CASTLE;
+const canWCastleK = (state) => state[BOARD_SIZE + 2] == CAN_CASTLE;
+const canBCastleQ = (state) => state[BOARD_SIZE + 3] == CAN_CASTLE;
+const canBCastleK = (state) => state[BOARD_SIZE + 4] == CAN_CASTLE;
 const getEnPassant = (state) => {
   if(state[BOARD_SIZE + 5] == EMPTY)
     return false;
@@ -99,9 +103,8 @@ const getEnPassant = (state) => {
     return [state[BOARD_SIZE + 5], state[BOARD_SIZE + 6]];
 };
 const getCounter = (state) => parseInt(state.substr(BOARD_SIZE + 7, 2));
-
-
-/* Checks what a board square contains */
+const getCastleChar = (bool) => bool ? CAN_CASTLE : CANT_CASTLE;
+/* Functions to check piece strings */
 const isEmpty = (char) => char == EMPTY;
 const isKing = (char) => char == KING_W || char == KING_B;
 const isQueen = (char) => char == QUEEN_W || char == QUEEN_B;
@@ -112,12 +115,72 @@ const isPawn = (char) => char == PAWN_W || char == PAWN_B;
 
 /* Gets the index of a given coordinate (file[1-8], rank[1-8])*/
 const getIndex = (file, rank) =>
-  (BOARD_SIDE - rank + 1) * BOARD_SIDE + file + 1;
+  (BOARD_SIDE - rank) * BOARD_SIDE + file - 1;
 
 /* Convert [file, rank] to an index in a state string*/
-const getFileRank = (index) =>
-  [index % BOARD_SIDE + 1, BOARD_SIDE - (index / BOARD_SIDE >> 0)];
+const getFile = (index) => index % BOARD_SIDE + 1;
+const getRank = (index) => BOARD_SIDE - (index / BOARD_SIDE >> 0);
+const getFileRank = (index) => [getFile(index), getRank(index)];
 
 /* Gets the piece at a given file and rank */
-const getPieceAt = (state, file, rank) =>
-  state[convertFileRankToIndex(file, rank)];
+const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
+
+/* Take an old state string, apply new moves and update with new pieces to
+ * create a new state string.
+ *
+ * moves: an array of [[oldIndex, newIndex], ...]. There is normally one
+ *        move but there are two in castling.
+ * newPiece: if promoting a pawn then [index, newChar] else false */
+const updateState = (oldState, moves, newPiece) => {
+  // Start with the castle flags as they were before, turn them off later if
+  // the rook or the king moves...
+  let WCastleQ = canWCastleQ(oldState);
+  let WCastleK = canWCastleK(oldState);
+  let BCastleQ = canBCastleQ(oldState);
+  let BCastleK = canBCastleK(oldState);
+  // Start with no enpassant move, if we move a pawn by two then update.
+  let enPassant = EMPTY + EMPTY;
+  // Set this to true if this is a pawn advance or there is a capture
+  let captureOrAdvance = false;
+  // Get the new board by applying the moves
+  var board = oldState;
+  for(let [oldIndex, newIndex] of moves){
+    if(isPawn(oldState[oldIndex])){
+      // If moving a pawn, this is a pawn advance
+      captureOrAdvance = true;
+      const oldRank = getRank(oldIndex);
+      const newRank = getRank(newIndex);
+      if (Math.abs(oldRank - newRank) == 2)
+        // If the pawn moves by 2 then set the enpassant to be the square
+        // that they could move by one (aka the midpoint).
+        // It is assumed that getFile(oldIndex) == getFile(newIndex)
+        enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
+    }
+    if(! isEmpty(newIndex)){
+      // If the new index isn't empty then there is a capture
+      captureOrAdvance = true;
+    }
+    if(newIndex < oldIndex)
+      board = board.substr(0, newIndex) +
+              board[oldIndex] +
+              board.substring(newIndex + 1, oldIndex) +
+              EMPTY +
+              board.substring(oldIndex + 1, BOARD_SIZE);
+    else
+      board = board.substr(0, oldIndex) +
+              EMPTY +
+              board.substring(oldIndex + 1, newIndex) +
+              board[oldIndex] +
+              board.substring(oldIndex + 1, BOARD_SIZE);
+  }
+  // Do pawn promotions
+  if (newPiece){
+    const [index, char] = newPiece;
+    board = board.substr(0, index) + char + board.substr(index + 1);
+  }
+  return board +
+         (isWhiteToPlay(oldState) ? BLACK_TO_PLAY : WHITE_TO_PLAY) +
+         getCastleChar(WCastleQ) + getCastleChar(WCastleK) +
+         getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
+         enPassant + (captureOrAdvance ? "00" : getCounter(oldState) + 1);
+};
