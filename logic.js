@@ -4,7 +4,6 @@
 // Castling is treated as a move for the king
 
 
-
 function getPossibleNewStates(oldState){
   for(let i = 0 ; i < BOARD_SIZE; i++){
     // Step through each square on the board
