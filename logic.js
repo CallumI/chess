@@ -91,12 +91,33 @@ const whereCanPieceAdvance = (state, index) => {
     return movesToReturn;
   } else {
     let allMoves = false;
-    if(isKing)        allMoves = kingAllMoves;
-    else if(isQueen)  allMoves = queenAllMoves;
-    else if(isBishop) allMoves = bishopAllMoves;
-    else if(isKnight) allMoves = knightAllMoves;
-    else if(isRook)   allMoves = rookAllMoves;
+    if(isKing(piece))        allMoves = kingAllMoves;
+    else if(isQueen(piece))  allMoves = queenAllMoves;
+    else if(isBishop(piece)) allMoves = bishopAllMoves;
+    else if(isKnight(piece)) allMoves = knightAllMoves;
+    else if(isRook(piece))   allMoves = rookAllMoves;
     else throw TypeError("Unknown moves");
-
+    for(let potentialPath of allMoves){
+      for(let [df, dr] of potentialPath){
+        const newFile = file + df;
+        const newRank = rank + dr;
+        if(newFile < 1 || newFile > BOARD_SIDE ||
+           newRank < 1 || newRank > BOARD_SIDE)
+          continue;
+        const newIndex = getIndex(file + df, rank + dr);
+        const moveTo = state[newIndex];
+        // Moving to an empty square is possible.
+        if(isEmpty(moveTo))
+          movesToReturn.push(newIndex);
+        else
+          // It is also possible to capture a piece of the opposite colour
+          if(white ^ isWhite(moveTo))
+            movesToReturn.push(newIndex);
+          // But this potential path is now exhausted, the next moves are
+          // 'blocked' by this one...
+          break;
+      }
+    }
+    return movesToReturn;
   }
 };
