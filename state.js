@@ -112,6 +112,7 @@ const isBishop = (char) => char == BISHOP_W || char == BISHOP_B;
 const isKnight = (char) => char == KNIGHT_W || char == KNIGHT_B;
 const isRook = (char) => char == ROOK_W || char == ROOK_B;
 const isPawn = (char) => char == PAWN_W || char == PAWN_B;
+const isWhite = (char) => char == char.toUpperCase();  // Could be empty!
 
 /* Gets the index of a given coordinate (file[1-8], rank[1-8])*/
 const getIndex = (file, rank) =>
@@ -130,7 +131,8 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  *
  * moves: an array of [[oldIndex, newIndex], ...]. There is normally one
  *        move but there are two in castling.
- * newPiece: if promoting a pawn then [index, newChar] else false */
+ * newPiece: if promoting a pawn then [index, newChar] else false
+ * TODO: What if there is an enpassant capture, where is it removed? */
 const updateState = (oldState, moves, newPiece) => {
   // Start with the castle flags as they were before, turn them off later if
   // the rook or the king moves...
