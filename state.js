@@ -1,4 +1,5 @@
 /* jshint esversion: 6 */
+"use strict;";
 
 /*
  * This file provides functions to manipulate the state string for the chessAI
