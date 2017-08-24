@@ -11,6 +11,10 @@ td {
   border: 1px solid white;
 }
 
+td.move {
+  background-color: purple !important;
+}
+
 td.inHand {
   background-color: #CDDC39 !important;
 }

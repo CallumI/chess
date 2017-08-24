@@ -44,10 +44,17 @@ function createTable(){
       // Can't use var to track index, must use let - otherwise callback
       // functions fail..
       let index = getIndex(file, rank);
-      // On click, put this piece in the hand...
-      // TODO: What if there is already something in the hand?
       td.addEventListener("click", (e) => {
-        setIndexInHand(index);
+        if(!indexInHand)  // If nothing in hand, get this in hand
+          setIndexInHand(index);
+        else
+          // If something already in hand and we can move there, do it!
+          if(whereCanPieceAdvance(displayState, indexInHand).includes(index)){
+            displayState = updateState(displayState, [[indexInHand, index]])
+            // TODO: Pawn Promotion stuff
+            releaseIndexInHand();  // We have put it down...
+          }
+          else releaseIndexHover(); // If we can't get there, release index
         e.stopPropagation();  // Hide from body which removes indexInHand
       });
       td.addEventListener("mouseover", () => setIndexHover(index));
@@ -67,8 +74,10 @@ function displayBoard(state){
 
 /* Setter for the indexInHand global, also updating the display */
 function setIndexInHand(index){
-  indexInHand = index;
-  display();  // update the display
+  if(!isWhiteToPlay(displayState) ^ isWhite(displayState[index])){
+    indexInHand = index;
+    display();  // update the display
+  }
 }
 
 /* Remove the indexInHand global, updating the display */
@@ -115,17 +124,26 @@ function printState(state){
 /* Updates the display with the current state and piece in hand */
 function display(){
   // Use the global displayState if it's avaliable, else use initialState.
-  let state = displayState || initialState;
-  // Set the only td which is 'inHand'
+  let state = displayState = displayState || initialState;
+  // If we have a piece in hand, or are hovering over a piece which is the same
+  // side the state indicates is about to play then get some indicies of
+  // possible moves to highlight. Otherwise, set this as an empty list so
+  // nothing is shown.
+  var pieceToFindMovesOf = indexInHand || indexHover;
+  var moves = (pieceToFindMovesOf &&
+               !isEmpty(state[pieceToFindMovesOf]) &&
+               ! (isWhite(state[pieceToFindMovesOf]) ^ isWhiteToPlay(state)))?
+    whereCanPieceAdvance(displayState, pieceToFindMovesOf) : [];
   Array.prototype.forEach.call(tds, (td, index) => {
-      if(index === indexInHand)
-        td.classList.add("inHand");
-      else
-        td.classList.remove("inHand");
-      if(index === indexHover)
-        td.classList.add("hover");
-      else
-        td.classList.remove("hover");
+      // Highlight indexInHand
+      if(index === indexInHand) td.classList.add("inHand");
+      else td.classList.remove("inHand");
+      // Highlight indexHover
+      if(index === indexHover) td.classList.add("hover");
+      else td.classList.remove("hover");
+      // Highlight potentialMove
+      if(moves.includes(index)) td.classList.add("move");
+      else td.classList.remove("move");
     }
   );
   displayBoard(state);

@@ -52,7 +52,7 @@ const knightAllMoves = [
              [[-1, -2]], [[1, -2]]
 ];
 
-const queenAllMoves = Array.prototype.concat(knightAllMoves, bishopAllMoves);
+const queenAllMoves = Array.prototype.concat(rookAllMoves, bishopAllMoves);
 
 /* Returns a list of possible new indexes from a single move of a piece.
  * This is every move except castling.
@@ -103,19 +103,20 @@ function whereCanPieceAdvance(state, index) {
         const newRank = rank + dr;
         if(newFile < 1 || newFile > BOARD_SIDE ||
            newRank < 1 || newRank > BOARD_SIDE)
-          continue;
+          break;
         const newIndex = getIndex(file + df, rank + dr);
         const moveTo = state[newIndex];
         // Moving to an empty square is possible.
         if(isEmpty(moveTo))
           movesToReturn.push(newIndex);
-        else
+        else {
           // It is also possible to capture a piece of the opposite colour
           if(white ^ isWhite(moveTo))
             movesToReturn.push(newIndex);
           // But this potential path is now exhausted, the next moves are
           // 'blocked' by this one...
           break;
+        }
       }
     }
     return movesToReturn;

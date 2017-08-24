@@ -106,7 +106,8 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  * moves: an array of [[oldIndex, newIndex], ...]. There is normally one
  *        move but there are two in castling.
  * newPiece: if promoting a pawn then [index, newChar] else false
- * TODO: What if there is an enpassant capture, where is it removed? */
+ * TODO: What if there is an enpassant capture, where is it removed?
+ * TODO: Castling isn't updated here! */
 function updateState(oldState, moves, newPiece){
   // Start with the castle flags as they were before, turn them off later if
   // the rook or the king moves...
@@ -133,7 +134,7 @@ function updateState(oldState, moves, newPiece){
         enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
     }
     // If the new index isn't empty then there is a capture
-    if(! isEmpty(newIndex)) captureOrAdvance = true;
+    if(! isEmpty(oldState[newIndex])) captureOrAdvance = true;
     // Move the piece in the board
     if(newIndex < oldIndex)
       board = board.substr(0, newIndex) +
@@ -146,7 +147,7 @@ function updateState(oldState, moves, newPiece){
               EMPTY +
               board.substring(oldIndex + 1, newIndex) +
               board[oldIndex] +
-              board.substring(oldIndex + 1, BOARD_SIZE);
+              board.substring(newIndex + 1, BOARD_SIZE);
   }
   // Do pawn promotions
   if (newPiece){
