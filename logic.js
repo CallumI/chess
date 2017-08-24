@@ -58,7 +58,7 @@ const queenAllMoves = Array.prototype.concat(knightAllMoves, bishopAllMoves);
  * This is every move except castling.
  * Doesn't deal with any possible checks ... that should be done later,
  * it probably requires calling this function */
-const whereCanPieceAdvance = (state, index) => {
+function whereCanPieceAdvance(state, index) {
   const piece = state[index];
   const white = isWhiteToPlay(state);
   const [file, rank] = getFileRank(index);
@@ -91,7 +91,7 @@ const whereCanPieceAdvance = (state, index) => {
     return movesToReturn;
   } else {
     let allMoves = false;
-    if(isKing(piece))        allMoves = kingAllMoves;
+    if (isKing(piece))       allMoves = kingAllMoves;
     else if(isQueen(piece))  allMoves = queenAllMoves;
     else if(isBishop(piece)) allMoves = bishopAllMoves;
     else if(isKnight(piece)) allMoves = knightAllMoves;
@@ -120,4 +120,4 @@ const whereCanPieceAdvance = (state, index) => {
     }
     return movesToReturn;
   }
-};
+}

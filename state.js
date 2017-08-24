@@ -70,11 +70,10 @@ const CANT_CASTLE = "0";
 
 /* Print a readable state string to the console */
 function printState(state){
-  for(let rank = BOARD_SIDE; rank > 0 ; rank --){
+  for(let rank = BOARD_SIDE; rank > 0 ; rank --)
     // Step through the ranks from 8 -> 1 (order of state string)
     console.log("" + rank + " " +
                 state.substr((BOARD_SIDE - rank) * BOARD_SIDE, BOARD_SIDE));
-  }
   console.log("  12345678");
   console.log((isWhiteToPlay(state) ? "White" : "Black") + " to play");
   if (canWCastleQ(state)) console.log("White can castle queenside");
@@ -96,12 +95,8 @@ const canWCastleQ = (state) => state[BOARD_SIZE + 1] == CAN_CASTLE;
 const canWCastleK = (state) => state[BOARD_SIZE + 2] == CAN_CASTLE;
 const canBCastleQ = (state) => state[BOARD_SIZE + 3] == CAN_CASTLE;
 const canBCastleK = (state) => state[BOARD_SIZE + 4] == CAN_CASTLE;
-const getEnPassant = (state) => {
-  if(state[BOARD_SIZE + 5] == EMPTY)
-    return false;
-  else
-    return [state[BOARD_SIZE + 5], state[BOARD_SIZE + 6]];
-};
+const getEnPassant = (state) => state[BOARD_SIZE + 5] == EMPTY ?
+  false : [state[BOARD_SIZE + 5], state[BOARD_SIZE + 6]];
 const getCounter = (state) => parseInt(state.substr(BOARD_SIZE + 7, 2));
 const getCastleChar = (bool) => bool ? CAN_CASTLE : CANT_CASTLE;
 /* Functions to check piece strings */
@@ -133,7 +128,7 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  *        move but there are two in castling.
  * newPiece: if promoting a pawn then [index, newChar] else false
  * TODO: What if there is an enpassant capture, where is it removed? */
-const updateState = (oldState, moves, newPiece) => {
+function updateState(oldState, moves, newPiece){
   // Start with the castle flags as they were before, turn them off later if
   // the rook or the king moves...
   let WCastleQ = canWCastleQ(oldState);
@@ -158,10 +153,9 @@ const updateState = (oldState, moves, newPiece) => {
         // It is assumed that getFile(oldIndex) == getFile(newIndex)
         enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
     }
-    if(! isEmpty(newIndex)){
-      // If the new index isn't empty then there is a capture
-      captureOrAdvance = true;
-    }
+    // If the new index isn't empty then there is a capture
+    if(! isEmpty(newIndex)) captureOrAdvance = true;
+    // Move the piece in the board
     if(newIndex < oldIndex)
       board = board.substr(0, newIndex) +
               board[oldIndex] +
@@ -185,4 +179,4 @@ const updateState = (oldState, moves, newPiece) => {
          getCastleChar(WCastleQ) + getCastleChar(WCastleK) +
          getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
          enPassant + (captureOrAdvance ? "00" : getCounter(oldState) + 1);
-};
+}
