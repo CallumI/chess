@@ -1,4 +1,3 @@
-/* jshint esversion: 6 */
 "use strict;";
 
 /* This file deals with game logic... where can a piece move? */

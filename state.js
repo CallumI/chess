@@ -1,4 +1,3 @@
-/* jshint esversion: 6 */
 "use strict;";
 
 /*
@@ -68,27 +67,6 @@ const CANT_CASTLE = "0";
                       "1111" +  //  all castling is intially posible
                       ".." +  // No en passant square
                       "00";  // No moves since pawn advance or capture
-
-/* Print a readable state string to the console */
-function printState(state){
-  for(let rank = BOARD_SIDE; rank > 0 ; rank --)
-    // Step through the ranks from 8 -> 1 (order of state string)
-    console.log("" + rank + " " +
-                state.substr((BOARD_SIDE - rank) * BOARD_SIDE, BOARD_SIDE));
-  console.log("  12345678");
-  console.log((isWhiteToPlay(state) ? "White" : "Black") + " to play");
-  if (canWCastleQ(state)) console.log("White can castle queenside");
-  if (canWCastleK(state)) console.log("White can castle kingside");
-  if (canBCastleQ(state)) console.log("Black can castle queenside");
-  if (canBCastleK(state)) console.log("Black can castle kingside");
-  const enPass = getEnPassant(state);
-  if (enPass)
-    console.log(`En Passant allows moving to ${enPass}`);
-  else
-    console.log("No En Passant");
-  console.log(`Had ${getCounter(state)} moves since ` +
-              `capture or pawn advance`);
-}
 
 /* Basic functions to read from the state */
 const isWhiteToPlay = (state) => state[BOARD_SIZE] == WHITE_TO_PLAY;
