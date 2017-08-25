@@ -1,8 +1,12 @@
 "use strict;";
 
-/*
- * This file provides functions to manipulate the state string for the chessAI
- */
+/* This file provides functions to manipulate the state string for the chessAI
+ * - the starting string state `initialState`
+ * - functions to abstract reading data from the state. For example, who is
+     to play next?
+ * - functions to check what piece is in a specific square.
+ * - functions to convert between index and (file, rank)
+ * - function to update the state after a move. */
 
 // Initial variables, mainly for readablity rather than adaptability
 const BOARD_SIDE = 8;
@@ -28,45 +32,19 @@ const BLACK_TO_PLAY = "b";
 const CAN_CASTLE = "1";
 const CANT_CASTLE = "0";
 
-/*
- * A state string is:
- * 64 Chars:
- *   Start with rank 8, end with rank 1   (white's perspective)
- *   Start with file a=1, end with rank h=8
- *   PNBRQK for white pieces
- *   pnbrqk for black pieces
- *   . for empty square
- * 1 Char:
- *   w or b for who to move next
- * 4 Char:
- *   Castling ability X (only based on 'has stuff moved?'
- *                       not 'does this cross check')
- *   1 if: white can castle queenside
- *   1 if: white can castle kingside
- *   1 if: black can castle queenside
- *   1 if: black can castle kingside
- * 2 Char:
- *   xy is (file, rank) of the square for en passant
- *   eg, after a move e4, this would be set to "53" = e3
- *   .. if nothing moves
- * 2 Char:
- *   0 Padded move counter without capture or pawn advance
- */
-
-
- /* The start of the game saved as a state */
- const initialState = "rnbqkbnr" +  // Rank 8  (black)
-                      "pppppppp" +  // Rank 7
-                      "........" +  // Rank 6
-                      "........" +  // Rank 5
-                      "........" +  // Rank 4
-                      "........" +  // Rank 3
-                      "PPPPPPPP" +  // Rank 2
-                      "RNBQKBNR" +  // Rank 1  (white)
-                      WHITE_TO_PLAY +  //  white to move next
-                      "1111" +  //  all castling is intially posible
-                      ".." +  // No en passant square
-                      "00";  // No moves since pawn advance or capture
+/* The start of the game saved as a state */
+const initialState = "rnbqkbnr" + // Rank 8  (black)
+  "pppppppp" + // Rank 7
+  "........" + // Rank 6
+  "........" + // Rank 5
+  "........" + // Rank 4
+  "........" + // Rank 3
+  "PPPPPPPP" + // Rank 2
+  "RNBQKBNR" + // Rank 1  (white)
+  WHITE_TO_PLAY + //  white to move next
+  "1111" + //  all castling is intially posible
+  ".." + // No en passant square
+  "00"; // No moves since pawn advance or capture
 
 /* Basic functions to read from the state */
 const isWhiteToPlay = (state) => state[BOARD_SIZE] == WHITE_TO_PLAY;
@@ -78,6 +56,7 @@ const getEnPassant = (state) => state[BOARD_SIZE + 5] == EMPTY ?
   false : [state[BOARD_SIZE + 5], state[BOARD_SIZE + 6]];
 const getCounter = (state) => parseInt(state.substr(BOARD_SIZE + 7, 2));
 const getCastleChar = (bool) => bool ? CAN_CASTLE : CANT_CASTLE;
+
 /* Functions to check piece strings */
 const isEmpty = (char) => char == EMPTY;
 const isKing = (char) => char == KING_W || char == KING_B;
@@ -86,13 +65,11 @@ const isBishop = (char) => char == BISHOP_W || char == BISHOP_B;
 const isKnight = (char) => char == KNIGHT_W || char == KNIGHT_B;
 const isRook = (char) => char == ROOK_W || char == ROOK_B;
 const isPawn = (char) => char == PAWN_W || char == PAWN_B;
-const isWhite = (char) => char == char.toUpperCase();  // Could be empty!
+const isWhite = (char) => char == char.toUpperCase(); // Could be empty!
 
-/* Gets the index of a given coordinate (file[1-8], rank[1-8])*/
-const getIndex = (file, rank) =>
-  (BOARD_SIDE - rank) * BOARD_SIDE + file - 1;
-
-/* Convert [file, rank] to an index in a state string*/
+/* Convert between the two coordinate systems: index[0, 63] and (file, rank)
+ * ([1, 8], [1, 8]) */
+const getIndex = (file, rank) => (BOARD_SIDE - rank) * BOARD_SIDE + file - 1;
 const getFile = (index) => index % BOARD_SIDE + 1;
 const getRank = (index) => BOARD_SIDE - (index / BOARD_SIDE >> 0);
 const getFileRank = (index) => [getFile(index), getRank(index)];
@@ -108,21 +85,23 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  * newPiece: if promoting a pawn then [index, newChar] else false
  * TODO: What if there is an enpassant capture, where is it removed?
  * TODO: Castling isn't updated here! */
-function updateState(oldState, moves, newPiece){
+function updateState(oldState, moves, newPiece) {
   // Start with the castle flags as they were before, turn them off later if
   // the rook or the king moves...
   let WCastleQ = canWCastleQ(oldState);
   let WCastleK = canWCastleK(oldState);
   let BCastleQ = canBCastleQ(oldState);
   let BCastleK = canBCastleK(oldState);
-  // Start with no enpassant move, if we move a pawn by two then update.
+  // Start with no enpassant move, if we move a pawn by two then replace
+  // this.
   let enPassant = EMPTY + EMPTY;
-  // Set this to true if this is a pawn advance or there is a capture
+  // Assume there is no capture or pawn advance until we find one.
+  // This is used for updating the counter in the new state.
   let captureOrAdvance = false;
   // Get the new board by applying the moves
   var board = oldState;
-  for(let [oldIndex, newIndex] of moves){
-    if(isPawn(oldState[oldIndex])){
+  for (let [oldIndex, newIndex] of moves) {
+    if (isPawn(oldState[oldIndex])) {
       // If moving a pawn, this is a pawn advance
       captureOrAdvance = true;
       const oldRank = getRank(oldIndex);
@@ -134,29 +113,27 @@ function updateState(oldState, moves, newPiece){
         enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
     }
     // If the new index isn't empty then there is a capture
-    if(! isEmpty(oldState[newIndex])) captureOrAdvance = true;
+    if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
     // Move the piece in the board
-    if(newIndex < oldIndex)
-      board = board.substr(0, newIndex) +
-              board[oldIndex] +
-              board.substring(newIndex + 1, oldIndex) +
-              EMPTY +
-              board.substring(oldIndex + 1, BOARD_SIZE);
+    if (newIndex < oldIndex)
+      board = (board.substr(0, newIndex) + board[oldIndex] +
+        board.substring(newIndex + 1, oldIndex) + EMPTY +
+        board.substring(oldIndex + 1, BOARD_SIZE));
     else
-      board = board.substr(0, oldIndex) +
-              EMPTY +
-              board.substring(oldIndex + 1, newIndex) +
-              board[oldIndex] +
-              board.substring(newIndex + 1, BOARD_SIZE);
+      board = (board.substr(0, oldIndex) + EMPTY +
+        board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
+        board.substring(newIndex + 1, BOARD_SIZE));
   }
   // Do pawn promotions
-  if (newPiece){
+  if (newPiece) {
     const [index, char] = newPiece;
     board = board.substr(0, index) + char + board.substr(index + 1);
   }
-  return board +
-         (isWhiteToPlay(oldState) ? BLACK_TO_PLAY : WHITE_TO_PLAY) +
-         getCastleChar(WCastleQ) + getCastleChar(WCastleK) +
-         getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
-         enPassant + (captureOrAdvance ? "00" : getCounter(oldState) + 1);
+  // Build and return a new state string.
+  const whoToPlay = isWhiteToPlay(oldState) ? BLACK_TO_PLAY : WHITE_TO_PLAY;
+  const counter = captureOrAdvance ? "00" : getCounter(oldState) + 1;
+  return board + whoToPlay +
+    getCastleChar(WCastleQ) + getCastleChar(WCastleK) +
+    getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
+    enPassant + counter;
 }
