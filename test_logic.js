@@ -1,4 +1,4 @@
-"use strict;";
+"use strict";
 
 /* Can we play e3 */
 function test_pawn_white_normal_advance() {

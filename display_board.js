@@ -1,4 +1,4 @@
-"use strict;";
+"use strict";
 
 /* This file provides the HTML UI. All element creation is done here rather that in
  * the containing HTML script.
@@ -26,7 +26,7 @@ toUnicode[PAWN_B] = "&#9823;";
 
 // Instead of using document.getElementById(), create all elements in
 // javascript and store them in this global object for easy, readable access.
-elements = {
+var elements = {
   tds: [], // list of the tds that make up the board. Created by createTable().
   trs: [] // list of the trs of the board table
 };

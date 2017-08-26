@@ -1,4 +1,4 @@
-"use strict;";
+"use strict";
 
 /* This file deals with game logic:
  * - where can a piece move - ignoring check?

@@ -2,5 +2,7 @@
   "esversion": 6,
   "freeze": true,
   "nonew": true,
-  "loopfunc": true
+  "loopfunc": true,
+  "-W097": false,
+  "-W117": false
 }
