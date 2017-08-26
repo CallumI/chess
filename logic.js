@@ -95,6 +95,7 @@ function whereCanPieceAdvance(state, index) {
     for (let fileOffset of [-1, 1]) {
       const newFile = file + fileOffset;
       const newRank = rank + rankDirection;
+      if (!isInBoard(newFile, newRank)) break;
       const newIndex = getIndex(newFile, newRank);
       const pieceToCapture = state[newIndex];
       // Capture a piece, moving to newIndex if:
