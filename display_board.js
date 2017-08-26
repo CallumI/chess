@@ -86,7 +86,8 @@ function displayBoard(state) {
 
 /* Setter for the indexInHand global, also updating the display */
 function setIndexInHand(index) {
-  if (!isWhiteToPlay(displayState) ^ isWhite(displayState[index])) {
+  const piece = displayState[index];
+  if (!isWhiteToPlay(displayState) ^ isWhite(piece) && !isEmpty(piece)) {
     indexInHand = index;
     display(); // update the display
   }
