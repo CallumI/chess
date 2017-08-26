@@ -117,9 +117,7 @@ function whereCanPieceAdvance(state, index) {
         const newRank = rank + dr;
         // If the new position is outside the board then we have exhausted all
         // moves in this direction so move on to a new direction.
-        if (newFile < 1 || newFile > BOARD_SIDE ||
-          newRank < 1 || newRank > BOARD_SIDE)
-          break;
+        if (!isInBoard(newFile, newRank)) break;
         const newIndex = getIndex(file + df, rank + dr);
         const moveTo = state[newIndex];
         // Moving to an empty square is possible.

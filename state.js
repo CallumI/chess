@@ -144,3 +144,9 @@ function updateState(oldState, move, newPiece) {
     getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
     enPassant + counter;
 }
+
+
+/* Returns true if file and rank are within the rank [1, BOARD_SIDE] */
+function isInBoard(file, rank){
+  return file >= 1 && file <= BOARD_SIDE && rank >= 1 && rank <= BOARD_SIDE;
+}
