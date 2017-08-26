@@ -1,24 +1,43 @@
+:root {
+  --square-bg-white: white;
+  --square-bg-black: #EEEEEE;
+  --square-bg-move: #03A9F4;
+  --square-bg-inHand: #FF9800;
+  --square-size: 50px;
+  --piece-size: 34px;
+}
+
 tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd) {
-  background-color: #EEEEEE;
+  background-color: var(--square-bg-black);
+  border-color: var(--square-bg-black);
+}
+
+tr:nth-child(even) td:nth-child(even), tr:nth-child(odd) td:nth-child(odd) {
+  background-color: var(--square-bg-white);
+  border-color: var(--square-bg-white);
 }
 
 td {
-  width: 50px;
-  height: 50px;
-  font-size: 38px;
+  width: var(--square-size);
+  height: var(--square-size);
+  font-size: var(--piece-size);
   text-align: center;
   border-collapse: collapse;
-  border: 1px solid white;
+  border: 1px solid;
 }
 
 td.move {
-  background-color: purple !important;
+  border-color: var(--square-bg-move) !important;
 }
 
 td.inHand {
-  background-color: #CDDC39 !important;
+  border-color: var(--square-bg-inHand) !important;
+}
+
+td.hover.interactable{
+  border-color: green !important;
 }
 
 td.hover {
-  border: 1px solid black;
+  border-color: red !important;
 }

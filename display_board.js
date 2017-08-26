@@ -156,6 +156,13 @@ function display() {
     // Highlight potentialMove
     if (moves.includes(index)) td.classList.add("move");
     else td.classList.remove("move");
+    // This square is interactable if:
+    // 1) It is one of the current moves
+    // 2) There is no piece in hand and its one of our pieces
+    if (moves.includes(index) || (!indexInHand && !isEmpty(state[index]) &&
+        !(isWhite(state[index]) ^ isWhiteToPlay(state))))
+      td.classList.add("interactable");
+    else td.classList.remove("interactable");
   });
   displayBoard(state);
 }
