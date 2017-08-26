@@ -1,8 +1,8 @@
 :root {
   --square-bg-white: white;
   --square-bg-black: #EEEEEE;
-  --square-bg-move: #03A9F4;
-  --square-bg-inHand: #FF9800;
+  --square-bg-move: #FF9800;
+  --square-bg-inHand: #03A9F4;
   --square-size: 63px;
   --piece-size: 44px;
 }
