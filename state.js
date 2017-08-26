@@ -81,15 +81,8 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  * create a new state string.
  *
  * move: an array of [oldIndex, newIndex]
- * newPiece: if promoting a pawn then [index, newChar] else false
- * TODO: Castling isn't updated here! */
+ * newPiece: if promoting a pawn then [index, newChar] else false */
 function updateState(oldState, move, newPiece) {
-  // Start with the castle flags as they were before, turn them off later if
-  // the rook or the king moves...
-  let WCastleQ = canWCastleQ(oldState);
-  let WCastleK = canWCastleK(oldState);
-  let BCastleQ = canBCastleQ(oldState);
-  let BCastleK = canBCastleK(oldState);
   // Start with no enpassant move, if we move a pawn by two then replace
   // this.
   let enPassant = EMPTY + EMPTY;
@@ -99,7 +92,8 @@ function updateState(oldState, move, newPiece) {
   // Get the new board by applying the move
   var board = oldState;
   let [oldIndex, newIndex] = move;
-  if (isPawn(oldState[oldIndex])) {
+  let piece = oldState[oldIndex];
+  if (isPawn(piece)) {
     // If moving a pawn, this is a pawn advance
     captureOrAdvance = true;
     const [oldFile, oldRank] = getFileRank(oldIndex);
@@ -129,10 +123,11 @@ function updateState(oldState, move, newPiece) {
   }
   // Build and return a new state string.
   const whoToPlay = isWhiteToPlay(oldState) ? BLACK_TO_PLAY : WHITE_TO_PLAY;
-  const counter = captureOrAdvance ? "00" : getCounter(oldState) + 1;
-  return board + whoToPlay +
-    getCastleChar(WCastleQ) + getCastleChar(WCastleK) +
-    getCastleChar(BCastleQ) + getCastleChar(BCastleK) +
+  // Reset or advance the counter. Then zero pad it.
+  let counter = captureOrAdvance ? "00" : String(getCounter(oldState) + 1);
+  if (counter.length == 1) counter = "0" + counter;
+  // Return the new state.
+  return board + whoToPlay + getNewCastleFlags(oldState, oldIndex, piece) +
     enPassant + counter;
 }
 
@@ -156,7 +151,30 @@ function movePieceOnBoard(board, newIndex, oldIndex) {
 }
 
 /* Changes the value at a given index and returns a new string */
-function changeValueAtIndex(state, index, newValue) {
-  return (state.substr(0, index) + newValue +
-    state.substring(index + 1, BOARD_SIZE));
+function changeValueAtIndex(str, index, newValue) {
+  return (str.substr(0, index) + newValue +
+    str.substring(index + 1, BOARD_SIZE));
+}
+
+/* Takes a state, an index of a piece that is moving and the piece itself.
+ * Returns an updated string of castle flags (length 4) */
+function getNewCastleFlags(oldState, oldIndex, piece) {
+  // Start with the castle flags as they were before, turn them off later if
+  // the rook or the king moves. Using the same order, provide a list of
+  // indicies of the rooks that need to move to turn off these flags.
+  // Use order: [white, white, black, black]
+  let castleFlags = oldState.substr(65, 4);
+  const startRookIndicies = [56, 63, 0, 7];
+  // If we are moving a rook from its start position, then that castle flag
+  // should be set to false.
+  if (isRook(piece) && startRookIndicies.includes(oldIndex))
+    castleFlags = changeValueAtIndex(castleFlags,
+      startRookIndicies.indexOf(oldIndex), "0");
+  // If the king moves, set the respective castleFlags to false.
+  if (isKing(piece))
+    if (isWhiteToPlay(oldState))
+      castleFlags = "00" + castleFlags.substr(2, 2);
+    else
+      castleFlags = castleFlags.substr(0, 2) + "00";
+  return castleFlags;
 }
