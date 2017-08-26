@@ -25,27 +25,30 @@ const min = Math.min;
  * this way. */
 
 /* beautify ignore:start */
-const kingAllMoves = [
+const movesByPiece = {};
+movesByPiece[KING_B] = movesByPiece[KING_W] = [
   [[-1,  1]], [[0,  1]], [[1,  1]],
   [[-1,  0]],            [[1,  0]],
   [[-1, -1]], [[0, -1]], [[1, -1]]
 ];
 
-const rookAllMoves = [  // [L, R, D, U] = [Left, Right, Down, Up]
+movesByPiece[ROOK_B] = movesByPiece[ROOK_W] = [
+  // [L, R, D, U] = [Left, Right, Down, Up]
   [[-1,  0], [-2,  0], [-3,  0], [-4,  0], [-5,  0], [-6,  0], [-7,  0]],  // L
   [[ 1,  0], [ 2,  0], [ 3,  0], [ 4,  0], [ 5,  0], [ 6,  0], [ 7,  0]],  // R
   [[ 0, -1], [ 0, -2], [ 0, -3], [ 0, -4], [ 0, -5], [ 0, -6], [ 0, -7]],  // D
   [[ 0,  1], [ 0,  2], [ 0,  3], [ 0,  4], [ 0,  5], [ 0,  6], [ 0,  7]]   // U
 ];
 
-const bishopAllMoves = [  // [L, R, B, T] = [Left, Right, Buttom, Top]
+movesByPiece[BISHOP_B] = movesByPiece[BISHOP_W] = [
+  // [L, R, B, T] = [Left, Right, Buttom, Top]
   [[-1, -1], [-2, -2], [-3, -3], [-4, -4], [-5, -5], [-6, -6], [-7, -7]],  // BL
   [[ 1, -1], [ 2, -2], [ 3, -3], [ 4, -4], [ 5, -5], [ 6, -6], [ 7, -7]],  // BR
   [[-1,  1], [-2,  2], [-3,  3], [-4,  4], [-5,  5], [-6,  6], [-7,  7]],  // TL
   [[ 1,  1], [ 2,  2], [ 3,  3], [ 4,  4], [ 5,  5], [ 6,  6], [ 7,  7]]   // TR
 ];
 
-const knightAllMoves = [
+movesByPiece[KNIGHT_B] = movesByPiece[KNIGHT_W] = [
              [[-1,  2]], [[1,  2]],
   [[-2,  1]],                       [[2,   1]],
   [[-2, -1]],                       [[2,  -1]],
@@ -53,7 +56,8 @@ const knightAllMoves = [
 ];
 
 /* beautify ignore:end */
-const queenAllMoves = Array.prototype.concat(rookAllMoves, bishopAllMoves);
+movesByPiece[QUEEN_B] = movesByPiece[QUEEN_W] =
+  Array.prototype.concat(movesByPiece[ROOK_B], movesByPiece[BISHOP_B]);
 
 /* Returns a list of possible new indexes from a single move of a piece.
  * This is every move except castling.
@@ -81,8 +85,8 @@ function whereCanPieceAdvance(state, index) {
     //    A pawn can only be on its initial rank if it hasn't moved yet so
     // isPawn(initialState[index]) checks if it hasn't moved.
     if (isPawn(initialState[index]) &&
-        isEmpty(state[getIndex(file, rank + rankDirection)]) &&
-        isEmpty(state[getIndex(file, rank + 2 * rankDirection)]))
+      isEmpty(state[getIndex(file, rank + rankDirection)]) &&
+      isEmpty(state[getIndex(file, rank + 2 * rankDirection)]))
       movesToReturn.push(getIndex(file, rank + 2 * rankDirection));
     // Store the file and rank of the square which can be moved to for an
     // enPassant capture. If there isn't one, this is false.
@@ -104,20 +108,11 @@ function whereCanPieceAdvance(state, index) {
   } else {
     // If it isn't a pawn then its moves are more regular and are defined
     // previously, grouped by direction.
-    let allMoves = false;
-    if (isKing(piece)) allMoves = kingAllMoves;
-    else if (isQueen(piece)) allMoves = queenAllMoves;
-    else if (isBishop(piece)) allMoves = bishopAllMoves;
-    else if (isKnight(piece)) allMoves = knightAllMoves;
-    else if (isRook(piece)) allMoves = rookAllMoves;
-    else throw TypeError("Unknown moves");
-    // Step through a list of vectors for each possible direction this piece
-    // can move.
     // For example: for a rook, this steps through [left, right, down, up]
-    for (let potentialPath of allMoves) {
+    for (let movesInOneDirection of movesByPiece[piece]) {
       // Starting at the move closest to the piece in this direction, step
       // through the possible moves.
-      for (let [df, dr] of potentialPath) {
+      for (let [df, dr] of movesInOneDirection) {
         const newFile = file + df;
         const newRank = rank + dr;
         // If the new position is outside the board then we have exhausted all
