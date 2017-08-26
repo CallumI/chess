@@ -47,32 +47,31 @@ const initialState = "rnbqkbnr" + // Rank 8  (black)
   "00"; // No moves since pawn advance or capture
 
 /* Basic functions to read from the state */
-const isWhiteToPlay = (state) => state[BOARD_SIZE] == WHITE_TO_PLAY;
-const canWCastleQ = (state) => state[BOARD_SIZE + 1] == CAN_CASTLE;
-const canWCastleK = (state) => state[BOARD_SIZE + 2] == CAN_CASTLE;
-const canBCastleQ = (state) => state[BOARD_SIZE + 3] == CAN_CASTLE;
-const canBCastleK = (state) => state[BOARD_SIZE + 4] == CAN_CASTLE;
-const getEnPassant = (state) => state[BOARD_SIZE + 5] == EMPTY ?
+const isWhiteToPlay = state => state[BOARD_SIZE] == WHITE_TO_PLAY;
+const canWCastleQ = state => state[BOARD_SIZE + 1] == CAN_CASTLE;
+const canWCastleK = state => state[BOARD_SIZE + 2] == CAN_CASTLE;
+const canBCastleQ = state => state[BOARD_SIZE + 3] == CAN_CASTLE;
+const canBCastleK = state => state[BOARD_SIZE + 4] == CAN_CASTLE;
+const getEnPassant = state => state[BOARD_SIZE + 5] == EMPTY ?
   false : [state[BOARD_SIZE + 5], state[BOARD_SIZE + 6]];
-const getCounter = (state) => parseInt(state.substr(BOARD_SIZE + 7, 2));
-const getCastleChar = (bool) => bool ? CAN_CASTLE : CANT_CASTLE;
+const getCounter = state => parseInt(state.substr(BOARD_SIZE + 7, 2));
 
 /* Functions to check piece strings */
-const isEmpty = (char) => char == EMPTY;
-const isKing = (char) => char == KING_W || char == KING_B;
-const isQueen = (char) => char == QUEEN_W || char == QUEEN_B;
-const isBishop = (char) => char == BISHOP_W || char == BISHOP_B;
-const isKnight = (char) => char == KNIGHT_W || char == KNIGHT_B;
-const isRook = (char) => char == ROOK_W || char == ROOK_B;
-const isPawn = (char) => char == PAWN_W || char == PAWN_B;
-const isWhite = (char) => char == char.toUpperCase(); // Could be empty!
+const isEmpty = char => char == EMPTY;
+const isKing = char => char == KING_W || char == KING_B;
+const isQueen = char => char == QUEEN_W || char == QUEEN_B;
+const isBishop = char => char == BISHOP_W || char == BISHOP_B;
+const isKnight = char => char == KNIGHT_W || char == KNIGHT_B;
+const isRook = char => char == ROOK_W || char == ROOK_B;
+const isPawn = char => char == PAWN_W || char == PAWN_B;
+const isWhite = char => char == char.toUpperCase(); // Could be empty!
 
 /* Convert between the two coordinate systems: index[0, 63] and (file, rank)
  * ([1, 8], [1, 8]) */
 const getIndex = (file, rank) => (BOARD_SIDE - rank) * BOARD_SIDE + file - 1;
-const getFile = (index) => index % BOARD_SIDE + 1;
-const getRank = (index) => BOARD_SIDE - (index / BOARD_SIDE >> 0);
-const getFileRank = (index) => [getFile(index), getRank(index)];
+const getFile = index => index % BOARD_SIDE + 1;
+const getRank = index => BOARD_SIDE - (index / BOARD_SIDE >> 0);
+const getFileRank = index => [getFile(index), getRank(index)];
 
 /* Gets the piece at a given file and rank */
 const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
@@ -107,53 +106,47 @@ function updateState(oldState, move, newPiece) {
     // a pawn that jumped over this square last move.
     const stateEnPassant = getEnPassant(oldState);
     if (oldFile != newFile && stateEnPassant &&
-      stateEnPassant[0] == newFile && stateEnPassant[1] == newRank) {
+      stateEnPassant[0] == newFile && stateEnPassant[1] == newRank)
       board = changeValueAtIndex(board, getIndex(newFile, oldRank), EMPTY);
-      captureOrAdvance = true;
-    }
   }
   // If the new index isn't empty then there is a capture
   if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
   // Make the move
   board = movePieceOnBoard(board, newIndex, oldIndex);
   // Do pawn promotions
-  if (newPiece) {
-    const [index, char] = newPiece;
-    board = board.substr(0, index) + char + board.substr(index + 1);
-  }
+  if (newPiece)
+    board = changeValueAtIndex(board, ...newPiece);
   // Build and return a new state string.
   const whoToPlay = isWhiteToPlay(oldState) ? BLACK_TO_PLAY : WHITE_TO_PLAY;
-  // Reset or advance the counter. Then zero pad it.
-  let counter = captureOrAdvance ? "00" : String(getCounter(oldState) + 1);
-  if (counter.length == 1) counter = "0" + counter;
   // Return the new state.
   return board + whoToPlay + getNewCastleFlags(oldState, oldIndex, piece) +
-    enPassant + counter;
+    enPassant + updateCounter(oldState, captureOrAdvance);
 }
 
-/* Returns true if file and rank are within the rank [1, BOARD_SIDE] */
-function isInBoard(file, rank) {
-  return file >= 1 && file <= BOARD_SIDE && rank >= 1 && rank <= BOARD_SIDE;
-}
+/* Returns true if file and rank are within the range [1, BOARD_SIDE] */
+const isInBoard = (file, rank) =>
+  file >= 1 && file <= BOARD_SIDE && rank >= 1 && rank <= BOARD_SIDE;
 
-/* Takes a string and returns a string of length BOARD_SIZE where oldIndex is EMPTY and newIndex
- * contains the piece that used to be at oldIndex. */
-function movePieceOnBoard(board, newIndex, oldIndex) {
-  return (newIndex < oldIndex) ? (
-    board.substr(0, newIndex) + board[oldIndex] +
-    board.substring(newIndex + 1, oldIndex) + EMPTY +
-    board.substring(oldIndex + 1, BOARD_SIZE)
-  ) : (
-    board.substr(0, oldIndex) + EMPTY +
-    board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
-    board.substring(newIndex + 1, BOARD_SIZE)
-  );
-}
+/* Takes a string and returns a string of length BOARD_SIZE where oldIndex is
+ * EMPTY and newIndex contains the piece that used to be at oldIndex. */
+const movePieceOnBoard = (board, newIndex, oldIndex) => (newIndex < oldIndex) ?
+  board.substr(0, newIndex) + board[oldIndex] +
+  board.substring(newIndex + 1, oldIndex) + EMPTY +
+  board.substring(oldIndex + 1, BOARD_SIZE) :
+  board.substr(0, oldIndex) + EMPTY +
+  board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
+  board.substring(newIndex + 1, BOARD_SIZE);
+
 
 /* Changes the value at a given index and returns a new string */
-function changeValueAtIndex(str, index, newValue) {
-  return (str.substr(0, index) + newValue +
-    str.substring(index + 1, BOARD_SIZE));
+const changeValueAtIndex = (str, index, newValue) =>
+  str.substr(0, index) + newValue + str.substring(index + 1, BOARD_SIZE);
+
+/* Takes a boolean: has there been a capture or advance and returns an updated
+ * zero padded counter string */
+function updateCounter(state, captureOrAdvance) {
+  let counter = captureOrAdvance ? "00" : String(getCounter(state) + 1);
+  return counter.length == 1 ? "0" + counter : counter;
 }
 
 /* Takes a state, an index of a piece that is moving and the piece itself.
@@ -169,12 +162,12 @@ function getNewCastleFlags(oldState, oldIndex, piece) {
   // should be set to false.
   if (isRook(piece) && startRookIndicies.includes(oldIndex))
     castleFlags = changeValueAtIndex(castleFlags,
-      startRookIndicies.indexOf(oldIndex), "0");
+      startRookIndicies.indexOf(oldIndex), CANT_CASTLE);
   // If the king moves, set the respective castleFlags to false.
   if (isKing(piece))
     if (isWhiteToPlay(oldState))
-      castleFlags = "00" + castleFlags.substr(2, 2);
+      castleFlags = CANT_CASTLE + CANT_CASTLE + castleFlags.substr(2, 2);
     else
-      castleFlags = castleFlags.substr(0, 2) + "00";
+      castleFlags = castleFlags.substr(0, 2) + CANT_CASTLE + CANT_CASTLE;
   return castleFlags;
 }
