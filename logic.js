@@ -138,3 +138,27 @@ function whereCanPieceAdvance(state, index) {
     return movesToReturn;
   }
 }
+
+/* Takes a state string an returns true or false depending on whether the
+ * player who is about to play is in check.
+ *
+ * To do this, it creates a new state with their opponent about to play and
+ * considers all other the oppoents moves to see if any could take the current
+ * player's king. */
+function isStateInCheck(state) {
+  const white = isWhiteToPlay(state);
+  const theirState = changeValueAtIndex(state, 64,
+    isWhiteToPlay(state) ? BLACK_TO_PLAY : WHITE_TO_PLAY);
+  var theirMoves = [];
+  var ourKingIndex = false;
+  for (let index = 0; index < BOARD_SIZE; index++) {
+    if (!isEmpty(state[index])) {
+      let piece = state[index];
+      if (isWhite(piece) ^ white)
+        theirMoves = theirMoves.concat(whereCanPieceAdvance(theirState, index));
+      else if (isKing(piece)) ourKingIndex = index;
+    }
+  }
+  if (!ourKingIndex) throw Error("Couldn't find your king!");
+  return theirMoves.includes(ourKingIndex);
+}
