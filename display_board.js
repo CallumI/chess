@@ -24,8 +24,12 @@ toUnicode[BISHOP_B] = "&#9821;";
 toUnicode[KNIGHT_B] = "&#9822;";
 toUnicode[PAWN_B] = "&#9823;";
 
-// A global list of the tds that make up the board. Created by createTable().
-var tds = [];
+// Instead of using document.getElementById(), create all elements in
+// javascript and store them in this global object for easy, readable access.
+elements = {
+  tds: [], // list of the tds that make up the board. Created by createTable().
+  trs: [] // list of the trs of the board table
+};
 var indexInHand; // The index of the item on the boad 'in hand' - being moved.
 var indexHover; // The index which the user is hovering over
 var displayState; // The state which is being displayed
@@ -39,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* Do all the initial DOM setup. (*not* state specific). */
 function setupDisplay() {
+  createInformationHTMLElements();
   createTable();
   document.body.addEventListener("click", () => releaseIndexInHand());
 }
@@ -50,9 +55,11 @@ function createTable() {
   for (let rank = BOARD_SIDE; rank > 0; rank--) {
     let tr = document.createElement("tr");
     for (let file = 1; file <= BOARD_SIDE; file++) {
+      // This inner loop steps through all the files and ranks, creates a td
+      // for each and registers event listeners.
       let td = document.createElement("td");
       // Can't use var to track index, must use let - otherwise callback
-      // functions fail..
+      // functions don't get it passed into their scope.
       let index = getIndex(file, rank);
       td.addEventListener("click", (e) => {
         if (!indexInHand) // If nothing in hand, get this in hand
@@ -67,45 +74,75 @@ function createTable() {
             releaseIndexInHand(); // We have put it down...
           }
         else releaseIndexHover(); // If we can't get there, release index
-        e.stopPropagation(); // Hide from body which removes indexInHand
+        // Hide this event from body which removes indexInHand when it recieves
+        // click events.
+        e.stopPropagation();
       });
       td.addEventListener("mouseover", () => setIndexHover(index));
       tr.appendChild(td);
-      tds.push(td);
+      elements.tds.push(td);
     }
     table.appendChild(tr);
+    elements.trs.push(tr);
   }
   document.body.appendChild(table);
-  table.addEventListener("mouseout", () => releaseIndexHover());
+  elements.table = table;
+  table.addEventListener("mouseout", releaseIndexHover);
 }
 
-/* Fills the HTML board with a given state */
-function displayBoard(state) {
-  tds.forEach((td, index) => td.innerHTML = toUnicode[state[index]]);
+function createInformationHTMLElements() {
+  // Create a container element for information.
+  elements.information = document.createElement("div");
+  document.body.appendChild(elements.information);
+  // Create a div to show who is next to play
+  elements.whoToPlay = document.createElement("div");
+  elements.information.appendChild(elements.whoToPlay);
+  // Create a div to show the current state
+  elements.textState = document.createElement("div");
+  elements.information.appendChild(elements.textState);
+  // Create a div to show the number of moves since advance
+  elements.movesBeforeAdvance = document.createElement("div");
+  elements.information.appendChild(elements.movesBeforeAdvance);
 }
 
-/* Setter for the indexInHand global, also updating the display */
+/* Fills the HTML board with a given state of pieces */
+function setPiecesOnBoard(state) {
+  elements.tds.forEach((td, index) => td.innerHTML = toUnicode[state[index]]);
+}
+
+/* Takes a string state and updates the information elements outside of the
+ * board. */
+function updateOtherInformation(state) {
+  let toPlay = isWhiteToPlay(state) ? "White" : "Black";
+  elements.whoToPlay.innerText = `${toPlay} to play next.`;
+  elements.textState.innerText = `State: ${state}`;
+  elements.movesBeforeAdvance.innerText = ('Moves since pawn advance: ' +
+    getCounter(state));
+}
+
+/* Set indexInHand if allowed, then update the display */
 function setIndexInHand(index) {
   const piece = displayState[index];
+  // Only set index in hand if this is a piece and its our own.
   if (!isWhiteToPlay(displayState) ^ isWhite(piece) && !isEmpty(piece)) {
     indexInHand = index;
     display(); // update the display
   }
 }
 
-/* Remove the indexInHand global, updating the display */
+/* Remove the indexInHand global, update display */
 function releaseIndexInHand() {
   indexInHand = false;
   display();
 }
 
-/* Set index indexHover globally. Update display */
+/* Set index indexHover, update display */
 function setIndexHover(index) {
   indexHover = index;
   display();
 }
 
-/* Remove indexHover globally. Update display */
+/* Remove indexHover, update display */
 function releaseIndexHover() {
   indexHover = false;
   display();
@@ -146,7 +183,9 @@ function display() {
       !isEmpty(state[pieceToFindMovesOf]) &&
       !(isWhite(state[pieceToFindMovesOf]) ^ isWhiteToPlay(state))) ?
     whereCanPieceAdvance(displayState, pieceToFindMovesOf) : [];
-  Array.prototype.forEach.call(tds, (td, index) => {
+  // Go through each table element and add or remove classes based on
+  // conditions.
+  Array.prototype.forEach.call(elements.tds, (td, index) => {
     // Highlight indexInHand
     if (index === indexInHand) td.classList.add("inHand");
     else td.classList.remove("inHand");
@@ -164,5 +203,6 @@ function display() {
       td.classList.add("interactable");
     else td.classList.remove("interactable");
   });
-  displayBoard(state);
+  setPiecesOnBoard(state);
+  updateOtherInformation(state);
 }
