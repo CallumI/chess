@@ -114,9 +114,7 @@ function updateState(oldState, move, newPiece) {
     const stateEnPassant = getEnPassant(oldState);
     if (oldFile != newFile && stateEnPassant &&
       stateEnPassant[0] == newFile && stateEnPassant[1] == newRank) {
-      let removeIndex = getIndex(newFile, oldRank);
-      board = (board.substr(0, removeIndex) + EMPTY +
-        board.substring(removeIndex + 1, BOARD_SIZE));
+      board = changeValueAtIndex(board, getIndex(newFile, oldRank), EMPTY);
       captureOrAdvance = true;
     }
   }
@@ -155,4 +153,10 @@ function movePieceOnBoard(board, newIndex, oldIndex) {
     board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
     board.substring(newIndex + 1, BOARD_SIZE)
   );
+}
+
+/* Changes the value at a given index and returns a new string */
+function changeValueAtIndex(state, index, newValue) {
+  return (state.substr(0, index) + newValue +
+    state.substring(index + 1, BOARD_SIZE));
 }
