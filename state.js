@@ -83,7 +83,6 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
  * moves: an array of [[oldIndex, newIndex], ...]. There is normally one
  *        move but there are two in castling.
  * newPiece: if promoting a pawn then [index, newChar] else false
- * TODO: What if there is an enpassant capture, where is it removed?
  * TODO: Castling isn't updated here! */
 function updateState(oldState, moves, newPiece) {
   // Start with the castle flags as they were before, turn them off later if
@@ -104,13 +103,23 @@ function updateState(oldState, moves, newPiece) {
     if (isPawn(oldState[oldIndex])) {
       // If moving a pawn, this is a pawn advance
       captureOrAdvance = true;
-      const oldRank = getRank(oldIndex);
-      const newRank = getRank(newIndex);
-      if (Math.abs(oldRank - newRank) == 2)
-        // If the pawn moves by 2 then set the enpassant to be the square
-        // that they could move by one (aka the midpoint).
-        // It is assumed that getFile(oldIndex) == getFile(newIndex)
+      const [oldFile, oldRank] = getFileRank(oldIndex);
+      const [newFile, newRank] = getFileRank(newIndex);
+      // If the pawn moves by 2 then set the enpassant to be the square
+      // that they could move by one (aka the midpoint).
+      if (Math.abs(oldRank - newRank) == 2 && oldFile == newFile)
         enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
+      // If moving between files then this is a pawn capture.
+      // If this is also a move to the en passant square then we need to remove
+      // a pawn that jumped over this square last move.
+      const stateEnPassant = getEnPassant(oldState);
+      if (oldFile != newFile && stateEnPassant &&
+        stateEnPassant[0] == newFile && stateEnPassant[1] == newRank) {
+        let removeIndex = getIndex(newFile, oldRank);
+        board = (board.substr(0, removeIndex) + EMPTY +
+          board.substring(removeIndex + 1, BOARD_SIZE));
+        captureOrAdvance = true;
+      }
     }
     // If the new index isn't empty then there is a capture
     if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;

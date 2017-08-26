@@ -48,7 +48,18 @@ function test_enpassant() {
     throw Error("Test failed");
 }
 
+/* Does a capture with en passant remove the extra piece? */
+function test_enpassant_updateState() {
+  let testState = "r.bqkbnrppppp.pp..n.........Pp..................PPPP.PPPRNBQKBNRw11116600";
+  let newState = updateState(testState, [
+    [getIndex(5, 5), getIndex(6, 6)]
+  ], false);
+  if (newState != "r.bqkbnrppppp.pp..n..P..........................PPPP.PPPRNBQKBNRb1111..00")
+    throw Error("Test failed");
+}
+
 test_pawn_white_normal_advance();
 test_pawn_white_double_advance();
 test_normal_pawn_capture();
 test_enpassant();
+test_enpassant_updateState();
