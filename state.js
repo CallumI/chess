@@ -122,15 +122,8 @@ function updateState(oldState, move, newPiece) {
   }
   // If the new index isn't empty then there is a capture
   if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
-  // Move the piece in the board
-  if (newIndex < oldIndex)
-    board = (board.substr(0, newIndex) + board[oldIndex] +
-      board.substring(newIndex + 1, oldIndex) + EMPTY +
-      board.substring(oldIndex + 1, BOARD_SIZE));
-  else
-    board = (board.substr(0, oldIndex) + EMPTY +
-      board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
-      board.substring(newIndex + 1, BOARD_SIZE));
+  // Make the move
+  board = movePieceOnBoard(board, newIndex, oldIndex);
   // Do pawn promotions
   if (newPiece) {
     const [index, char] = newPiece;
@@ -145,8 +138,21 @@ function updateState(oldState, move, newPiece) {
     enPassant + counter;
 }
 
-
 /* Returns true if file and rank are within the rank [1, BOARD_SIDE] */
 function isInBoard(file, rank) {
   return file >= 1 && file <= BOARD_SIDE && rank >= 1 && rank <= BOARD_SIDE;
+}
+
+/* Takes a string and returns a string of length BOARD_SIZE where oldIndex is EMPTY and newIndex
+ * contains the piece that used to be at oldIndex. */
+function movePieceOnBoard(board, newIndex, oldIndex) {
+  return (newIndex < oldIndex) ? (
+    board.substr(0, newIndex) + board[oldIndex] +
+    board.substring(newIndex + 1, oldIndex) + EMPTY +
+    board.substring(oldIndex + 1, BOARD_SIZE)
+  ) : (
+    board.substr(0, oldIndex) + EMPTY +
+    board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
+    board.substring(newIndex + 1, BOARD_SIZE)
+  );
 }
