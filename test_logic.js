@@ -51,9 +51,7 @@ function test_enpassant() {
 /* Does a capture with en passant remove the extra piece? */
 function test_enpassant_updateState() {
   let testState = "r.bqkbnrppppp.pp..n.........Pp..................PPPP.PPPRNBQKBNRw11116600";
-  let newState = updateState(testState, [
-    [getIndex(5, 5), getIndex(6, 6)]
-  ], false);
+  let newState = updateState(testState, [getIndex(5, 5), getIndex(6, 6)], false);
   if (newState != "r.bqkbnrppppp.pp..n..P..........................PPPP.PPPRNBQKBNRb1111..00")
     throw Error("Test failed");
 }

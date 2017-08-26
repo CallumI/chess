@@ -80,11 +80,10 @@ const getPieceAt = (state, file, rank) => state[getIndex(file, rank)];
 /* Take an old state string, apply new moves and update with new pieces to
  * create a new state string.
  *
- * moves: an array of [[oldIndex, newIndex], ...]. There is normally one
- *        move but there are two in castling.
+ * move: an array of [oldIndex, newIndex]
  * newPiece: if promoting a pawn then [index, newChar] else false
  * TODO: Castling isn't updated here! */
-function updateState(oldState, moves, newPiece) {
+function updateState(oldState, move, newPiece) {
   // Start with the castle flags as they were before, turn them off later if
   // the rook or the king moves...
   let WCastleQ = canWCastleQ(oldState);
@@ -97,42 +96,41 @@ function updateState(oldState, moves, newPiece) {
   // Assume there is no capture or pawn advance until we find one.
   // This is used for updating the counter in the new state.
   let captureOrAdvance = false;
-  // Get the new board by applying the moves
+  // Get the new board by applying the move
   var board = oldState;
-  for (let [oldIndex, newIndex] of moves) {
-    if (isPawn(oldState[oldIndex])) {
-      // If moving a pawn, this is a pawn advance
+  let [oldIndex, newIndex] = move;
+  if (isPawn(oldState[oldIndex])) {
+    // If moving a pawn, this is a pawn advance
+    captureOrAdvance = true;
+    const [oldFile, oldRank] = getFileRank(oldIndex);
+    const [newFile, newRank] = getFileRank(newIndex);
+    // If the pawn moves by 2 then set the enpassant to be the square
+    // that they could move by one (aka the midpoint).
+    if (Math.abs(oldRank - newRank) == 2 && oldFile == newFile)
+      enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
+    // If moving between files then this is a pawn capture.
+    // If this is also a move to the en passant square then we need to remove
+    // a pawn that jumped over this square last move.
+    const stateEnPassant = getEnPassant(oldState);
+    if (oldFile != newFile && stateEnPassant &&
+      stateEnPassant[0] == newFile && stateEnPassant[1] == newRank) {
+      let removeIndex = getIndex(newFile, oldRank);
+      board = (board.substr(0, removeIndex) + EMPTY +
+        board.substring(removeIndex + 1, BOARD_SIZE));
       captureOrAdvance = true;
-      const [oldFile, oldRank] = getFileRank(oldIndex);
-      const [newFile, newRank] = getFileRank(newIndex);
-      // If the pawn moves by 2 then set the enpassant to be the square
-      // that they could move by one (aka the midpoint).
-      if (Math.abs(oldRank - newRank) == 2 && oldFile == newFile)
-        enPassant = "" + getFile(oldIndex) + (oldRank + newRank) / 2;
-      // If moving between files then this is a pawn capture.
-      // If this is also a move to the en passant square then we need to remove
-      // a pawn that jumped over this square last move.
-      const stateEnPassant = getEnPassant(oldState);
-      if (oldFile != newFile && stateEnPassant &&
-        stateEnPassant[0] == newFile && stateEnPassant[1] == newRank) {
-        let removeIndex = getIndex(newFile, oldRank);
-        board = (board.substr(0, removeIndex) + EMPTY +
-          board.substring(removeIndex + 1, BOARD_SIZE));
-        captureOrAdvance = true;
-      }
     }
-    // If the new index isn't empty then there is a capture
-    if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
-    // Move the piece in the board
-    if (newIndex < oldIndex)
-      board = (board.substr(0, newIndex) + board[oldIndex] +
-        board.substring(newIndex + 1, oldIndex) + EMPTY +
-        board.substring(oldIndex + 1, BOARD_SIZE));
-    else
-      board = (board.substr(0, oldIndex) + EMPTY +
-        board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
-        board.substring(newIndex + 1, BOARD_SIZE));
   }
+  // If the new index isn't empty then there is a capture
+  if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
+  // Move the piece in the board
+  if (newIndex < oldIndex)
+    board = (board.substr(0, newIndex) + board[oldIndex] +
+      board.substring(newIndex + 1, oldIndex) + EMPTY +
+      board.substring(oldIndex + 1, BOARD_SIZE));
+  else
+    board = (board.substr(0, oldIndex) + EMPTY +
+      board.substring(oldIndex + 1, newIndex) + board[oldIndex] +
+      board.substring(newIndex + 1, BOARD_SIZE));
   // Do pawn promotions
   if (newPiece) {
     const [index, char] = newPiece;

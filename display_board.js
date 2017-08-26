@@ -67,9 +67,7 @@ function createTable() {
         else
           // If something already in hand and we can move there, do it!
           if (whereCanPieceAdvance(displayState, indexInHand).includes(index)) {
-            displayState = updateState(displayState, [
-              [indexInHand, index]
-            ]);
+            displayState = updateState(displayState, [indexInHand, index]);
             // TODO: Pawn Promotion stuff
             releaseIndexInHand(); // We have put it down...
           }
