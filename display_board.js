@@ -123,7 +123,7 @@ function updateOtherInformation(state) {
 function setIndexInHand(index) {
   const piece = displayState[index];
   // Only set index in hand if this is a piece and its our own.
-  if (!isWhiteToPlay(displayState) ^ isWhite(piece) && !isEmpty(piece)) {
+  if (isIndexAPieceToMove(displayState, index)) {
     indexInHand = index;
     display(); // update the display
   }
@@ -178,9 +178,8 @@ function display() {
   // possible moves to highlight. Otherwise, set this as an empty list so
   // nothing is shown.
   var pieceToFindMovesOf = indexInHand || indexHover;
-  var moves = (pieceToFindMovesOf &&
-      !isEmpty(state[pieceToFindMovesOf]) &&
-      !(isWhite(state[pieceToFindMovesOf]) ^ isWhiteToPlay(state))) ?
+  var moves = pieceToFindMovesOf &&
+    isIndexAPieceToMove(state, pieceToFindMovesOf) ?
     whereCanPieceMove(displayState, pieceToFindMovesOf) : [];
   // Go through each table element and add or remove classes based on
   // conditions.
@@ -195,11 +194,10 @@ function display() {
     if (moves.includes(index)) td.classList.add("move");
     else td.classList.remove("move");
     // This square is interactable if:
-    // 1) It is one of the current moves
+    // 1) It is one of the current moves or
     // 2) There is no piece in hand and its one of our pieces
-    if (moves.includes(index) || (!indexInHand && !isEmpty(state[index]) &&
-        !(isWhite(state[index]) ^ isWhiteToPlay(state))))
-      td.classList.add("interactable");
+    if (moves.includes(index) || (!indexInHand &&
+        isIndexAPieceToMove(displayState, index))) td.classList.add("interactable");
     else td.classList.remove("interactable");
   });
   setPiecesOnBoard(state);

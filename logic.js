@@ -97,11 +97,10 @@ function whereCanPieceAdvance(state, index) {
       const newRank = rank + rankDirection;
       if (!isInBoard(newFile, newRank)) break;
       const newIndex = getIndex(newFile, newRank);
-      const pieceToCapture = state[newIndex];
       // Capture a piece, moving to newIndex if:
-      //   1) there is a current piece at newIndex AND its not on our side
+      //   1) there is a current piece at newIndex AND its not on our side or
       //   2) there is an en passant square in the state and we can move to it.
-      if ((!isEmpty(pieceToCapture) && white ^ isWhite(pieceToCapture)) ||
+      if (!isEmpty(state[newIndex]) && !isIndexAPieceToMove(state, newIndex) ||
         (enPassant && enPassant[0] == newFile && enPassant[1] == newRank))
         movesToReturn.push(newIndex);
     }
@@ -120,14 +119,13 @@ function whereCanPieceAdvance(state, index) {
         // moves in this direction so move on to a new direction.
         if (!isInBoard(newFile, newRank)) break;
         const newIndex = getIndex(file + df, rank + dr);
-        const moveTo = state[newIndex];
         // Moving to an empty square is possible.
-        if (isEmpty(moveTo))
+        if (isEmpty(state[newIndex]))
           movesToReturn.push(newIndex);
         else {
           // If it isn't empty then we can still move there provided it is
           // occupied by a opposing piece and this is a capture.
-          if (white ^ isWhite(moveTo))
+          if (!isIndexAPieceToMove(state, newIndex))
             movesToReturn.push(newIndex);
           // But this piece can't move further than this because the next moves
           // are 'blocked' by this one. Move to the next direction.
@@ -147,11 +145,11 @@ function canTakeTheirKing(state) {
   var theirKingIndex = false;
   for (let index = 0; index < BOARD_SIZE; index++) {
     if (!isEmpty(state[index])) {
-      let piece = state[index];
-      if (!(isWhite(piece) ^ white)) // If this is our piece, add its moves.
+      // If this is our piece, add its moves.
+      if (isIndexAPieceToMove(state, index))
         ourMoves = ourMoves.concat(whereCanPieceAdvance(state, index));
       // If this is their king, store the index
-      else if (isKing(piece)) theirKingIndex = index;
+      else if (isKing(state[index])) theirKingIndex = index;
     }
   }
   if (!theirKingIndex) throw Error("Couldn't find their king!");
@@ -174,3 +172,9 @@ function whereCanPieceMove(state, index) {
   return whereCanPieceAdvance(state, index).filter((newIndex) =>
     !canTakeTheirKing(updateState(state, [index, newIndex])));
 }
+
+/* Returns true if the piece at index in state is a piece that belongs to the
+ * player that is about to play. If there is no piece at index, this return
+ * false */
+const isIndexAPieceToMove = (state, index) => !isEmpty(state[index]) &&
+  !(isWhite(state[index]) ^ isWhiteToPlay(state));
