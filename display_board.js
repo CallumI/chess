@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* Do all the initial DOM setup. (*not* state specific). */
 function setupDisplay() {
-  createInformationHTMLElements();
+  loadHTMLElements();
   createTable();
   document.body.addEventListener("click", () => releaseIndexInHand());
 }
@@ -85,24 +85,23 @@ function createTable() {
     table.appendChild(tr);
     elements.trs.push(tr);
   }
-  document.body.appendChild(table);
+  elements.boardContainer.appendChild(table);
   elements.table = table;
   table.addEventListener("mouseout", releaseIndexHover);
 }
 
-function createInformationHTMLElements() {
-  // Create a container element for information.
-  elements.information = document.createElement("div");
-  document.body.appendChild(elements.information);
-  // Create a div to show who is next to play
-  elements.whoToPlay = document.createElement("div");
-  elements.information.appendChild(elements.whoToPlay);
-  // Create a div to show the current state
-  elements.textState = document.createElement("div");
-  elements.information.appendChild(elements.textState);
-  // Create a div to show the number of moves since advance
-  elements.movesBeforeAdvance = document.createElement("div");
-  elements.information.appendChild(elements.movesBeforeAdvance);
+/* Load the HTML elements into a global object. All the querySelector() calls are
+ * made here. After this, all DOM interaction comes through the element object. */
+function loadHTMLElements() {
+  elements.whoToPlay = document.querySelector("#el_whoToPlay");
+  elements.movesBeforeAdvance = document.querySelector("#el_movesBeforeAdvance");
+  elements.boardContainer = document.querySelector("#el_boardContainer");
+  elements.textState = document.querySelector("#el_textState");
+  elements.stateCopy = document.querySelector("#el_stateCopy");
+  elements.stateCopy.addEventListener("click", () => {
+    elements.textState.select();
+    document.execCommand('copy');
+  });
 }
 
 /* Fills the HTML board with a given state of pieces */
@@ -115,7 +114,7 @@ function setPiecesOnBoard(state) {
 function updateOtherInformation(state) {
   let toPlay = isWhiteToPlay(state) ? "White" : "Black";
   elements.whoToPlay.innerText = `${toPlay} to play next.`;
-  elements.textState.innerText = `State: ${state}`;
+  elements.textState.value = state;
   elements.movesBeforeAdvance.innerText = ('Moves since pawn advance: ' +
     getCounter(state));
 }
