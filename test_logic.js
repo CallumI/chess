@@ -58,8 +58,19 @@ function test_enpassant_updateState() {
     throw Error("Test failed");
 }
 
+/* Tests that a pawn can't advance by two if it is blocked doing a move of
+ * one */
+function test_pawn_first_move_blocked() {
+  let testState = "rnbqkbnrpppp.ppp............p................N..PPPPPPPPRNBQKB.Rw11115600";
+  let moves = whereCanPieceAdvance(testState, getIndex(6, 2));
+  if (moves.length != 0) {
+    throw Error("Test failed");
+  }
+}
+
 test_pawn_white_normal_advance();
 test_pawn_white_double_advance();
 test_normal_pawn_capture();
 test_enpassant();
 test_enpassant_updateState();
+test_pawn_first_move_blocked();
