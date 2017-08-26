@@ -24,6 +24,7 @@ td {
   text-align: center;
   border-collapse: collapse;
   border: 1px solid;
+  cursor: not-allowed;
 }
 
 td.move {
@@ -32,6 +33,10 @@ td.move {
 
 td.inHand {
   border-color: var(--square-bg-inHand) !important;
+}
+
+td.interactable {
+  cursor: pointer;
 }
 
 td.hover.interactable{
