@@ -75,10 +75,13 @@ function whereCanPieceAdvance(state, index) {
     if (isEmpty(state[getIndex(file, rank + rankDirection)]))
       movesToReturn.push(getIndex(file, rank + rankDirection));
     // If this is the first move for this pawn, then the pawn can move forward
-    // by two ranks rather than one (provided that square is empty).
+    // by two ranks rather than one).
+    //    This can only happen if both the square immediately infront of it
+    // *and* the square it is moving to is empty.
     //    A pawn can only be on its initial rank if it hasn't moved yet so
     // isPawn(initialState[index]) checks if it hasn't moved.
     if (isPawn(initialState[index]) &&
+        isEmpty(state[getIndex(file, rank + rankDirection)]) &&
         isEmpty(state[getIndex(file, rank + 2 * rankDirection)]))
       movesToReturn.push(getIndex(file, rank + 2 * rankDirection));
     // Store the file and rank of the square which can be moved to for an
