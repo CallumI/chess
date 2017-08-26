@@ -3,8 +3,8 @@
   --square-bg-black: #EEEEEE;
   --square-bg-move: #03A9F4;
   --square-bg-inHand: #FF9800;
-  --square-size: 50px;
-  --piece-size: 34px;
+  --square-size: 63px;
+  --piece-size: 44px;
 }
 
 tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd) {
@@ -40,4 +40,8 @@ td.hover.interactable{
 
 td.hover {
   border-color: red !important;
+}
+
+#el_textState {
+  width: 463px;
 }
