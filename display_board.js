@@ -66,7 +66,7 @@ function createTable() {
           setIndexInHand(index);
         else
           // If something already in hand and we can move there, do it!
-          if (whereCanPieceAdvance(displayState, indexInHand).includes(index)) {
+          if (whereCanPieceMove(displayState, indexInHand).includes(index)) {
             displayState = updateState(displayState, [indexInHand, index]);
             // TODO: Pawn Promotion stuff
             releaseIndexInHand(); // We have put it down...
@@ -181,7 +181,7 @@ function display() {
   var moves = (pieceToFindMovesOf &&
       !isEmpty(state[pieceToFindMovesOf]) &&
       !(isWhite(state[pieceToFindMovesOf]) ^ isWhiteToPlay(state))) ?
-    whereCanPieceAdvance(displayState, pieceToFindMovesOf) : [];
+    whereCanPieceMove(displayState, pieceToFindMovesOf) : [];
   // Go through each table element and add or remove classes based on
   // conditions.
   Array.prototype.forEach.call(elements.tds, (td, index) => {

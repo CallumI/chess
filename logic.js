@@ -139,26 +139,38 @@ function whereCanPieceAdvance(state, index) {
   }
 }
 
-/* Takes a state string an returns true or false depending on whether the
- * player who is about to play is in check.
- *
- * To do this, it creates a new state with their opponent about to play and
- * considers all other the oppoents moves to see if any could take the current
- * player's king. */
-function isStateInCheck(state) {
+/* Can the current player take the opponent's king using whereCanPieceAdvance()
+ * as moves. */
+function canTakeTheirKing(state) {
   const white = isWhiteToPlay(state);
-  const theirState = changeValueAtIndex(state, 64,
-    isWhiteToPlay(state) ? BLACK_TO_PLAY : WHITE_TO_PLAY);
-  var theirMoves = [];
-  var ourKingIndex = false;
+  var ourMoves = [];
+  var theirKingIndex = false;
   for (let index = 0; index < BOARD_SIZE; index++) {
     if (!isEmpty(state[index])) {
       let piece = state[index];
-      if (isWhite(piece) ^ white)
-        theirMoves = theirMoves.concat(whereCanPieceAdvance(theirState, index));
-      else if (isKing(piece)) ourKingIndex = index;
+      if (!(isWhite(piece) ^ white)) // If this is our piece, add its moves.
+        ourMoves = ourMoves.concat(whereCanPieceAdvance(state, index));
+      // If this is their king, store the index
+      else if (isKing(piece)) theirKingIndex = index;
     }
   }
-  if (!ourKingIndex) throw Error("Couldn't find your king!");
-  return theirMoves.includes(ourKingIndex);
+  if (!theirKingIndex) throw Error("Couldn't find their king!");
+  return ourMoves.includes(theirKingIndex);
+}
+
+/* Returns true if the player about to move is in check.
+ * Assumes that the current player does nothing by giving the state to the
+ * opponent and then checks if they can take the current player's king */
+function isStateInCheck(state) {
+  const theirState = changeValueAtIndex(state, 64,
+    isWhiteToPlay(state) ? BLACK_TO_PLAY : WHITE_TO_PLAY);
+  return canTakeTheirKing(theirState);
+}
+
+/* This function returns the valid moves for a piece. It uses
+ * whereCanPieceAdvance() to check what moves are possible and then
+ * filters them to moves that don't put you in check. */
+function whereCanPieceMove(state, index) {
+  return whereCanPieceAdvance(state, index).filter((newIndex) =>
+    !canTakeTheirKing(updateState(state, [index, newIndex])));
 }
