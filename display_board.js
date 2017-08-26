@@ -96,6 +96,7 @@ function loadHTMLElements() {
   elements.boardContainer = document.querySelector("#el_boardContainer");
   elements.textState = document.querySelector("#el_textState");
   elements.stateCopy = document.querySelector("#el_stateCopy");
+  elements.stateInCheck = document.querySelector("#el_stateInCheck");
   elements.stateCopy.addEventListener("click", () => {
     elements.textState.select();
     document.execCommand('copy');
@@ -115,6 +116,7 @@ function updateOtherInformation(state) {
   elements.textState.value = state;
   elements.movesBeforeAdvance.innerText = ('Moves since pawn advance: ' +
     getCounter(state));
+  elements.stateInCheck.innerText = isStateInCheck(state) ? "In check!" : "Not in check";
 }
 
 /* Set indexInHand if allowed, then update the display */
