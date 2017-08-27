@@ -64,7 +64,7 @@ function createTable() {
       td.addEventListener("click", (e) => {
         // If something already in hand and we can move there, do it!
         if (indexInHand &&
-            whereCanPieceMove(displayState, indexInHand).includes(index)) {
+          whereCanPieceMove(displayState, indexInHand).includes(index)) {
           displayState = updateState(displayState, [indexInHand, index]);
           // TODO: Pawn Promotion stuff
           releaseIndexInHand(); // We have put it down...
@@ -180,10 +180,11 @@ function display() {
   // side the state indicates is about to play then get some indicies of
   // possible moves to highlight. Otherwise, set this as an empty list so
   // nothing is shown.
-  var pieceToFindMovesOf = indexInHand || indexHover;
-  var moves = pieceToFindMovesOf &&
-    isIndexAPieceToMove(state, pieceToFindMovesOf) ?
-    whereCanPieceMove(displayState, pieceToFindMovesOf) : [];
+  var moves = indexInHand &&
+    isIndexAPieceToMove(state, indexInHand) ?
+    whereCanPieceMove(displayState, indexInHand) : [];
+  var potentialMoves = indexHover && isIndexAPieceToMove(state, indexHover) ?
+    whereCanPieceMove(displayState, indexHover) : [];
   // Go through each table element and add or remove classes based on
   // conditions.
   Array.prototype.forEach.call(elements.tds, (td, index) => {
@@ -193,14 +194,16 @@ function display() {
     // Highlight indexHover
     if (index === indexHover) td.classList.add("hover");
     else td.classList.remove("hover");
-    // Highlight potentialMove
-    if (moves.includes(index)) td.classList.add("move");
-    else td.classList.remove("move");
+    // Highlight potential moves by the hovered piece
+    if (potentialMoves.includes(index)) td.classList.add("potentialMove");
+    else td.classList.remove("potentialMove");
     // This square is interactable if:
-    // 1) It is one of the current moves or
-    // 2) Its one of our pieces but not the one in hand
+    // 1) It is one of the moves by the piece in hand or
+    // 2) Its one of our pieces but not the one in hand and has possible moves
     if (moves.includes(index) || (index != indexInHand &&
-        isIndexAPieceToMove(displayState, index))) td.classList.add("interactable");
+        isIndexAPieceToMove(displayState, index) &&
+        whereCanPieceMove(displayState, index).length != 0))
+      td.classList.add("interactable");
     else td.classList.remove("interactable");
   });
   setPiecesOnBoard(state);

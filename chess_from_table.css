@@ -1,20 +1,23 @@
 :root {
-  --square-bg-white: white;
-  --square-bg-black: #EEEEEE;
-  --square-bg-move: #FF9800;
-  --square-bg-inHand: #03A9F4;
-  --square-size: 63px;
-  --piece-size: 44px;
+  --clr-square-white: white;
+  --clr-square-black: #EEEEEE;
+  --clr-potentialMove: #BA68C8;
+  --clr-interactable: #FF9800;
+  --clr-inHand: #2196F3;
+  --clr-yes: #4CAF50;
+  --clr-no: #F44336;
+  --square-size: 80px;
+  --piece-size: 54px;
 }
 
 tr:nth-child(odd) td:nth-child(even), tr:nth-child(even) td:nth-child(odd) {
-  background-color: var(--square-bg-black);
-  border-color: var(--square-bg-black);
+  background-color: var(--clr-square-black);
+  border-color: var(--clr-square-black);
 }
 
 tr:nth-child(even) td:nth-child(even), tr:nth-child(odd) td:nth-child(odd) {
-  background-color: var(--square-bg-white);
-  border-color: var(--square-bg-white);
+  background-color: var(--clr-square-white);
+  border-color: var(--clr-square-white);
 }
 
 td {
@@ -23,30 +26,31 @@ td {
   font-size: var(--piece-size);
   text-align: center;
   border-collapse: collapse;
-  border: 1px solid;
+  border: 3px solid;
   cursor: not-allowed;
 }
 
-td.move {
-  border-color: var(--square-bg-move) !important;
-}
-
-td.inHand {
-  border-color: var(--square-bg-inHand) !important;
+td.potentialMove {
+  border-color: var(--clr-potentialMove) !important;
 }
 
 td.interactable {
   cursor: pointer;
+  border-color: var(--clr-interactable) !important;
 }
 
-td.hover.interactable{
-  border-color: green !important;
+td.inHand {
+  border-color: var(--clr-inHand) !important;
+}
+
+td.interactable.hover {
+  border-color: var(--clr-yes) !important;
 }
 
 td.hover {
-  border-color: red !important;
+  border-color: var(--clr-no) !important;
 }
 
 #el_textState {
-  width: 463px;
+  width: 630px;
 }
