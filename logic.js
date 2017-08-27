@@ -138,22 +138,17 @@ function whereCanPieceAdvance(state, index) {
 
 /* Can the current player take the opponent's king using whereCanPieceAdvance()
  * as moves. */
-function canTakeTheirKing(state) {
-  const white = isWhiteToPlay(state);
-  var ourMoves = [];
-  var theirKingIndex = null;
-  for (let index = 0; index < BOARD_SIZE; index++) {
-    if (!isEmpty(state[index])) {
-      // If this is our piece, add its moves.
-      if (isIndexAPieceToMove(state, index))
-        ourMoves = ourMoves.concat(whereCanPieceAdvance(state, index));
-      // If this is their king, store the index
-      else if (isKing(state[index])) theirKingIndex = index;
-    }
-  }
-  if (theirKingIndex === null) throw Error("Couldn't find their king!");
-  return ourMoves.includes(theirKingIndex);
-}
+const canTakeTheirKing = state => canTakePieceAtIndex(state,
+  state.indexOf(isWhiteToPlay(state) ? KING_B : KING_W));
+
+/* Returns true or false if the current player can take the piece at index with
+ * any of their pieces.
+ * Go through all the pieces on the board, if any of them belong to the
+ * current player and can take index, return true. Otherwise, return false. */
+const canTakePieceAtIndex = (state, index) =>
+  Array.prototype.some.call(state.substr(0, BOARD_SIZE),
+    (aPiece, anIndex) => isIndexAPieceToMove(state, anIndex) &&
+    whereCanPieceAdvance(state, anIndex).includes(index));
 
 /* Returns true if the player about to move is in check.
  * Assumes that the current player does nothing by giving the state to the
