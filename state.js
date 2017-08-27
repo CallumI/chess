@@ -88,15 +88,15 @@ function updateState(oldState, move, newPiece) {
   // Assume there is no capture or pawn advance until we find one.
   // This is used for updating the counter in the new state.
   let captureOrAdvance = false;
-  // Get the new board by applying the move
-  var board = oldState;
+  // Read from the oldState
+  var board = oldState; // Will be truncated to BOARD_SIZE later
   let [oldIndex, newIndex] = move;
+  const [oldFile, oldRank] = getFileRank(oldIndex);
+  const [newFile, newRank] = getFileRank(newIndex);
   let piece = oldState[oldIndex];
   if (isPawn(piece)) {
     // If moving a pawn, this is a pawn advance
     captureOrAdvance = true;
-    const [oldFile, oldRank] = getFileRank(oldIndex);
-    const [newFile, newRank] = getFileRank(newIndex);
     // If the pawn moves by 2 then set the enpassant to be the square
     // that they could move by one (aka the midpoint).
     if (Math.abs(oldRank - newRank) == 2 && oldFile == newFile)
@@ -111,6 +111,14 @@ function updateState(oldState, move, newPiece) {
   }
   // If the new index isn't empty then there is a capture
   if (!isEmpty(oldState[newIndex])) captureOrAdvance = true;
+  // If king and moving by two then we need to move the rook as this is
+  // castling.
+  if (isKing(piece) && Math.abs(newFile - oldFile) == 2)
+    // In the same order as in the state string.
+    if (newIndex == 58) board = movePieceOnBoard(board, 59, 56);
+    else if (newIndex == 62) board = movePieceOnBoard(board, 61, 63);
+  else if (newIndex == 2) board = movePieceOnBoard(board, 3, 0);
+  else if (newIndex == 6) board = movePieceOnBoard(board, 5, 7);
   // Make the move
   board = movePieceOnBoard(board, newIndex, oldIndex);
   // Do pawn promotions
