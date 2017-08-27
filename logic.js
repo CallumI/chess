@@ -159,15 +159,12 @@ function canTakeTheirKing(state) {
 /* Returns true if the player about to move is in check.
  * Assumes that the current player does nothing by giving the state to the
  * opponent and then checks if they can take the current player's king */
-function isStateInCheck(state) {
-  const theirState = changeValueAtIndex(state, 64,
-    isWhiteToPlay(state) ? BLACK_TO_PLAY : WHITE_TO_PLAY);
-  return canTakeTheirKing(theirState);
-}
+const isStateInCheck = state => canTakeTheirKing(swapPlayer(state));
 
 /* This function returns the valid moves for a piece. It uses
  * whereCanPieceAdvance() to check what moves are possible and then
- * filters them to moves that don't put you in check. */
+ * filters them to moves that create a state where they can't take the current
+ * player's king. */
 function whereCanPieceMove(state, index) {
   return whereCanPieceAdvance(state, index).filter((newIndex) =>
     !canTakeTheirKing(updateState(state, [index, newIndex])));

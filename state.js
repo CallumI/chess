@@ -179,3 +179,7 @@ function getNewCastleFlags(oldState, oldIndex, piece) {
       castleFlags = castleFlags.substr(0, 2) + CANT_CASTLE + CANT_CASTLE;
   return castleFlags;
 }
+
+/* Returns the same state with them to play */
+const swapPlayer = (state) => changeValueAtIndex(state, 64,
+  isWhiteToPlay(state) ? BLACK_TO_PLAY : WHITE_TO_PLAY);
