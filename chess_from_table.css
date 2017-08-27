@@ -4,8 +4,6 @@
   --clr-potentialMove: #BA68C8;
   --clr-interactable: #FF9800;
   --clr-inHand: #2196F3;
-  --clr-yes: #4CAF50;
-  --clr-no: #F44336;
   --square-size: 80px;
   --piece-size: 54px;
 }
@@ -28,6 +26,7 @@ td {
   border-collapse: collapse;
   border: 3px solid;
   cursor: not-allowed;
+  user-select: none;
 }
 
 td.potentialMove {
@@ -41,14 +40,6 @@ td.interactable {
 
 td.inHand {
   border-color: var(--clr-inHand) !important;
-}
-
-td.interactable.hover {
-  border-color: var(--clr-yes) !important;
-}
-
-td.hover {
-  border-color: var(--clr-no) !important;
 }
 
 #el_textState {

@@ -4,5 +4,6 @@
   "nonew": true,
   "loopfunc": true,
   "-W097": false,
-  "-W117": false
+  "-W117": false,
+  "-W040": false
 }

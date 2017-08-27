@@ -45,7 +45,10 @@ document.addEventListener("DOMContentLoaded", () => {
 function setupDisplay() {
   loadHTMLElements();
   createTable();
-  document.body.addEventListener("click", () => releaseIndexInHand());
+  document.body.addEventListener("click", () => {
+    indexInHand = false;
+    display();
+  });
 }
 
 /* Add a HTML table the same size as the board.
@@ -58,28 +61,10 @@ function createTable() {
       // This inner loop steps through all the files and ranks, creates a td
       // for each and registers event listeners.
       let td = document.createElement("td");
-      // Can't use var to track index, must use let - otherwise callback
-      // functions don't get it passed into their scope.
-      let index = getIndex(file, rank);
-      td.addEventListener("click", (e) => {
-        // If something already in hand and we can move there, do it!
-        if (indexInHand &&
-          whereCanPieceMove(displayState, indexInHand).includes(index)) {
-          displayState = updateState(displayState, [indexInHand, index]);
-          // TODO: Pawn Promotion stuff
-          releaseIndexInHand(); // We have put it down...
-        } else {
-          // If we can't make a move then reset indexInHand and try to set it
-          // again with a potential new piece of our own.
-          indexInHand = false;
-          setIndexInHand(index);
-          display();
-        }
-        // Hide this event from body which removes indexInHand when it recieves
-        // click events.
-        e.stopPropagation();
-      });
-      td.addEventListener("mouseover", () => setIndexHover(index));
+      // Set the index on the td element. Can be accessed through 'this' in
+      // callback functions.
+      td.index = getIndex(file, rank);
+      td.addEventListener("mouseover", hoverTd);
       tr.appendChild(td);
       elements.tds.push(td);
     }
@@ -88,7 +73,10 @@ function createTable() {
   }
   elements.boardContainer.appendChild(table);
   elements.table = table;
-  table.addEventListener("mouseout", releaseIndexHover);
+  table.addEventListener("mouseout", () => {
+    indexHover = false;
+    display();
+  });
 }
 
 /* Load the HTML elements into a global object. All the querySelector() calls are
@@ -104,6 +92,33 @@ function loadHTMLElements() {
     elements.textState.select();
     document.execCommand('copy');
   });
+}
+
+/* This callback is called when a td is clicked. It should only be called
+ * By tds with the event listener so they must be interactable */
+function clickTd(e) {
+  // If something already in hand and we can move there, do it!
+  if (indexInHand &&
+    whereCanPieceMove(displayState, indexInHand).includes(this.index)) {
+    displayState = updateState(displayState, [indexInHand, this.index]);
+    // TODO: Pawn Promotion stuff
+    tryToSetIndexInHand(this.index); // We have put it down...
+  } else {
+    // If we can't make a move then reset indexInHand and try to set it
+    // again with a potential new piece of our own.
+    indexInHand = false;
+    tryToSetIndexInHand(this.index);
+  }
+  display();
+  // Hide this event from body which removes indexInHand when it recieves
+  // click events.
+  e.stopPropagation();
+}
+
+/* Callback when a td is hovered over. This is not just interactable tds.*/
+function hoverTd() {
+  indexHover = this.index;
+  display();
 }
 
 /* Fills the HTML board with a given state of pieces */
@@ -122,32 +137,16 @@ function updateOtherInformation(state) {
   elements.stateInCheck.innerText = isStateInCheck(state) ? "In check!" : "Not in check";
 }
 
-/* Set indexInHand if allowed, then update the display */
-function setIndexInHand(index) {
+/* Only set indexInHand if possible */
+function tryToSetIndexInHand(index) {
   const piece = displayState[index];
-  // Only set index in hand if this is a piece and its our own.
-  if (isIndexAPieceToMove(displayState, index)) {
-    indexInHand = index;
-    display(); // update the display
-  }
-}
-
-/* Remove the indexInHand global, update display */
-function releaseIndexInHand() {
   indexInHand = false;
-  display();
-}
-
-/* Set index indexHover, update display */
-function setIndexHover(index) {
-  indexHover = index;
-  display();
-}
-
-/* Remove indexHover, update display */
-function releaseIndexHover() {
-  indexHover = false;
-  display();
+  // Only set index in hand if this is a piece and its our own and it can
+  // actually move.
+  if (isIndexAPieceToMove(displayState, index) &&
+    whereCanPieceMove(displayState, index).length > 0) {
+    indexInHand = index;
+  }
 }
 
 /* Print a readable state string to the console */
@@ -191,9 +190,6 @@ function display() {
     // Highlight indexInHand
     if (index === indexInHand) td.classList.add("inHand");
     else td.classList.remove("inHand");
-    // Highlight indexHover
-    if (index === indexHover) td.classList.add("hover");
-    else td.classList.remove("hover");
     // Highlight potential moves by the hovered piece
     if (potentialMoves.includes(index)) td.classList.add("potentialMove");
     else td.classList.remove("potentialMove");
@@ -202,9 +198,13 @@ function display() {
     // 2) Its one of our pieces but not the one in hand and has possible moves
     if (moves.includes(index) || (index != indexInHand &&
         isIndexAPieceToMove(displayState, index) &&
-        whereCanPieceMove(displayState, index).length != 0))
+        whereCanPieceMove(displayState, index).length != 0)) {
+      td.addEventListener("click", clickTd);
       td.classList.add("interactable");
-    else td.classList.remove("interactable");
+    } else {
+      td.removeEventListener("click", clickTd);
+      td.classList.remove("interactable");
+    }
   });
   setPiecesOnBoard(state);
   updateOtherInformation(state);
