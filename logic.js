@@ -104,7 +104,6 @@ function whereCanPieceAdvance(state, index) {
         (enPassant && enPassant[0] == newFile && enPassant[1] == newRank))
         movesToReturn.push(newIndex);
     }
-    return movesToReturn;
   } else {
     // If it isn't a pawn then its moves are more regular and are defined
     // previously, grouped by direction.
@@ -133,8 +132,8 @@ function whereCanPieceAdvance(state, index) {
         }
       }
     }
-    return movesToReturn;
   }
+  return movesToReturn;
 }
 
 /* Can the current player take the opponent's king using whereCanPieceAdvance()
