@@ -142,7 +142,7 @@ function whereCanPieceAdvance(state, index) {
 function canTakeTheirKing(state) {
   const white = isWhiteToPlay(state);
   var ourMoves = [];
-  var theirKingIndex = false;
+  var theirKingIndex = null;
   for (let index = 0; index < BOARD_SIZE; index++) {
     if (!isEmpty(state[index])) {
       // If this is our piece, add its moves.
@@ -152,7 +152,7 @@ function canTakeTheirKing(state) {
       else if (isKing(state[index])) theirKingIndex = index;
     }
   }
-  if (!theirKingIndex) throw Error("Couldn't find their king!");
+  if (theirKingIndex === null) throw Error("Couldn't find their king!");
   return ourMoves.includes(theirKingIndex);
 }
 

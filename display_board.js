@@ -30,8 +30,8 @@ var elements = {
   tds: [], // list of the tds that make up the board. Created by createTable().
   trs: [] // list of the trs of the board table
 };
-var indexInHand; // The index of the item on the boad 'in hand' - being moved.
-var indexHover; // The index which the user is hovering over
+var indexInHand = null; // The index of the item on the boad 'in hand' - being moved.
+var indexHover = null; // The index which the user is hovering over
 var displayState; // The state which is being displayed
 
 // Draw the chess board when the page loads
@@ -46,7 +46,7 @@ function setupDisplay() {
   loadHTMLElements();
   createTable();
   document.body.addEventListener("click", () => {
-    indexInHand = false;
+    indexInHand = null;
     display();
   });
 }
@@ -74,7 +74,7 @@ function createTable() {
   elements.boardContainer.appendChild(table);
   elements.table = table;
   table.addEventListener("mouseout", () => {
-    indexHover = false;
+    indexHover = null;
     display();
   });
 }
@@ -98,7 +98,7 @@ function loadHTMLElements() {
  * By tds with the event listener so they must be interactable */
 function clickTd(e) {
   // If something already in hand and we can move there, do it!
-  if (indexInHand &&
+  if (indexInHand != null &&
     whereCanPieceMove(displayState, indexInHand).includes(this.index)) {
     displayState = updateState(displayState, [indexInHand, this.index]);
     // TODO: Pawn Promotion stuff
@@ -106,7 +106,6 @@ function clickTd(e) {
   } else {
     // If we can't make a move then reset indexInHand and try to set it
     // again with a potential new piece of our own.
-    indexInHand = false;
     tryToSetIndexInHand(this.index);
   }
   display();
@@ -140,7 +139,7 @@ function updateOtherInformation(state) {
 /* Only set indexInHand if possible */
 function tryToSetIndexInHand(index) {
   const piece = displayState[index];
-  indexInHand = false;
+  indexInHand = null;
   // Only set index in hand if this is a piece and its our own and it can
   // actually move.
   if (isIndexAPieceToMove(displayState, index) &&
@@ -167,7 +166,7 @@ function printState(state) {
   else
     console.log("No En Passant");
   console.log(`Had ${getCounter(state)} moves since capture or pawn advance`);
-  if (indexInHand)
+  if (indexInHand != null)
     console.log(`In hand we have: ${indexInHand}`);
 }
 
@@ -179,10 +178,11 @@ function display() {
   // side the state indicates is about to play then get some indicies of
   // possible moves to highlight. Otherwise, set this as an empty list so
   // nothing is shown.
-  var moves = indexInHand &&
+  var moves = indexInHand != null &&
     isIndexAPieceToMove(state, indexInHand) ?
     whereCanPieceMove(displayState, indexInHand) : [];
-  var potentialMoves = indexHover && isIndexAPieceToMove(state, indexHover) ?
+  var potentialMoves = indexHover != null &&
+    isIndexAPieceToMove(state, indexHover) ?
     whereCanPieceMove(displayState, indexHover) : [];
   // Go through each table element and add or remove classes based on
   // conditions.
@@ -196,9 +196,9 @@ function display() {
     // This square is interactable if:
     // 1) It is one of the moves by the piece in hand or
     // 2) Its one of our pieces but not the one in hand and has possible moves
-    if (moves.includes(index) || (index != indexInHand &&
+    if (moves.includes(index) || (index !== indexInHand &&
         isIndexAPieceToMove(displayState, index) &&
-        whereCanPieceMove(displayState, index).length != 0)) {
+        whereCanPieceMove(displayState, index).length !== 0)) {
       td.addEventListener("click", clickTd);
       td.classList.add("interactable");
     } else {
