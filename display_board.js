@@ -62,16 +62,19 @@ function createTable() {
       // functions don't get it passed into their scope.
       let index = getIndex(file, rank);
       td.addEventListener("click", (e) => {
-        if (!indexInHand) // If nothing in hand, get this in hand
+        // If something already in hand and we can move there, do it!
+        if (indexInHand &&
+            whereCanPieceMove(displayState, indexInHand).includes(index)) {
+          displayState = updateState(displayState, [indexInHand, index]);
+          // TODO: Pawn Promotion stuff
+          releaseIndexInHand(); // We have put it down...
+        } else {
+          // If we can't make a move then reset indexInHand and try to set it
+          // again with a potential new piece of our own.
+          indexInHand = false;
           setIndexInHand(index);
-        else
-          // If something already in hand and we can move there, do it!
-          if (whereCanPieceMove(displayState, indexInHand).includes(index)) {
-            displayState = updateState(displayState, [indexInHand, index]);
-            // TODO: Pawn Promotion stuff
-            releaseIndexInHand(); // We have put it down...
-          }
-        else releaseIndexHover(); // If we can't get there, release index
+          display();
+        }
         // Hide this event from body which removes indexInHand when it recieves
         // click events.
         e.stopPropagation();
@@ -195,8 +198,8 @@ function display() {
     else td.classList.remove("move");
     // This square is interactable if:
     // 1) It is one of the current moves or
-    // 2) There is no piece in hand and its one of our pieces
-    if (moves.includes(index) || (!indexInHand &&
+    // 2) Its one of our pieces but not the one in hand
+    if (moves.includes(index) || (index != indexInHand &&
         isIndexAPieceToMove(displayState, index))) td.classList.add("interactable");
     else td.classList.remove("interactable");
   });
