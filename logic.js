@@ -157,11 +157,64 @@ const isStateInCheck = state => canTakeTheirKing(swapPlayer(state));
 
 /* This function returns the valid moves for a piece. It uses
  * whereCanPieceAdvance() to check what moves are possible and then
- * filters them to moves that create a state where they can't take the current
- * player's king. */
+ * filters them to moves that create a state where they can't take the
+ * current player's king.
+ * Finally it adds any moves (for the king) which involve castling.*/
 function whereCanPieceMove(state, index) {
-  return whereCanPieceAdvance(state, index).filter((newIndex) =>
-    !canTakeTheirKing(updateState(state, [index, newIndex])));
+  // Start off with moves except castling and reduce them to those which,
+  // don't put the current player in check.
+  const movesToReturn = whereCanPieceAdvance(state, index)
+    .filter((newIndex) =>
+      !canTakeTheirKing(updateState(state, [index, newIndex])));
+  if (isKing(state[index])) {
+    // For each castle option this is a list of
+    // [rook's index, is castling possible based on state,
+    //  list of indicies that must be empty,
+    //  list of indicies where they king cant be in check]
+    // In the list of empties:
+    //  - 2nd element is where the king moves
+    // In the list of not in check use increasing order
+    /* beautify ignore:start */
+    const differentCastleOptions = [
+      [56, canWCastleQ(state), [59, 58, 57], [58, 59, 60]],
+      [63, canWCastleK(state), [61, 62], [60, 61, 62]],
+      [0, canBCastleQ(state), [3, 2, 1], [2, 3, 4]],
+      [7, canBCastleK(state), [5, 6], [4, 5, 6]]];
+    /* beautify ignore:end */
+    for (let [rookIndex, possible, mustBeEmpty, theyCantMoveTo] of
+      differentCastleOptions) {
+      // Do the basic checks, only continue if:
+      // 1 + 2) we haven't moved this king / castle
+      // 3) and every square between the king and the rook is empty
+      if (possible && mustBeEmpty.every(anIndex => isEmpty(state[anIndex]))) {
+        // At this point we must check if
+        // 4) the king is not currently in check or
+        // 5) the king does not pass through a square attacked by an enemy.
+        // 6) the king does not end up in check
+
+        // `theyCantMoveTo` contains a list of indicies that can't be moved to
+        // by the opponent to pass 4, 5, 6 (not repectively).
+
+        // Get a list of all the indicies that they can *capture* from this
+        // state and check that none of the indicies in theyCantMoveTo are
+        // included.
+
+        // Although whereCanPieceAdvance() includes moves forward by pawns
+        // which can't be captures, if a pawn can move forward and
+        // interrupt the castling path then it also threatens a square on
+        // the castling path.
+        let theirState = swapPlayer(state);
+        let theyCanCapture = [].concat.apply([],
+          Array.prototype.map.call(state.substr(0, BOARD_SIZE),
+            (aPiece, anIndex) => isIndexAPieceToMove(theirState, anIndex) ?
+            whereCanPieceAdvance(theirState, anIndex) : []));
+        if (theyCantMoveTo.every((indexToCheck) =>
+            !theyCanCapture.includes(indexToCheck)))
+          movesToReturn.push(mustBeEmpty[1]); // Add the castling move!
+      }
+    }
+  }
+  return movesToReturn;
 }
 
 /* Returns true if the piece at index in state is a piece that belongs to the
